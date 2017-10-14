@@ -1,4 +1,4 @@
-/* eslint-disable no-undef,no-return-await,default-case,max-depth,no-warning-comments */
+/* eslint-disable no-undef,no-return-await,default-case,max-depth */
 const BaseRest = require('./_rest')
 module.exports = class extends BaseRest {
   async getAction () {
@@ -16,70 +16,8 @@ module.exports = class extends BaseRest {
       const objects = await this.getObjectsInTermsByLimit(term)
       return this.success(objects)
     }
-
-    const id = this.get('id')
-    if (!think.isEmpty(id)) {
-      let fields = [
-        'id',
-        'author',
-        'status',
-        'type',
-        'title',
-        'name',
-        'content',
-        'sort',
-        'excerpt',
-        'date',
-        'modified',
-        'parent'
-      ];
-      fields = unique(fields);
-
-      let query = {}
-      query.id = id
-      query = {status: ['NOT IN', 'trash'], id: id}
-      return await this.getPodcast(query, fields)
-    }
-
-    const parent = this.get('parent')
-    let fields = [
-      'id',
-      'author',
-      'status',
-      'type',
-      'title',
-      'name',
-      'content',
-      'sort',
-      'excerpt',
-      'date',
-      'modified',
-      'parent'
-    ];
-    fields = unique(fields);
-    let query = {}
-    if (!think.isEmpty(parent)) {
-      query.parent = parent
-    }
-    query.status = ['NOT IN', 'trash']
-    const status = this.get('status')
-
-    // let queryType = think.isEmpty(status) ? 'publish' : status
-    // let queryType = think.isEmpty(status) ? '' : status
-    if (!think.isEmpty(status)) {
-      if (status === 'my') {
-        // query.status = ['NOT IN', 'trash']
-        query.author = this.ctx.state.user.id
-      }
-      if (status === 'drafts') {
-        query.status = ['like', '%draft%']
-      } else {
-        query.status = status
-      }
-    }
-    return await this.getPodcastList(query, fields)
-
   }
+
   async getObjectsInTerms (termId) {
     const taxonomyModel = this.model('taxonomy', {appId: this.appId})
     const objects = await taxonomyModel.getObjectsInTermsByPage(termId)
@@ -144,73 +82,68 @@ module.exports = class extends BaseRest {
     return []
   }
 
+  // async dealObjects () {}
+
   /**
    * 获取分类信息
    * /api/category 获取全部栏目（树结构）
    * /api/category/1 获取栏目id为1的栏目信息
    * @returns {Promise.<*>}
    */
-  async get1Action () {
+  async getaaaAction () {
     const id = this.get('id')
     const type = this.get('type')
     const status = this.get('status')
     let query = {}
-    let fields = [
-      'id',
-      'author',
-      'status',
-      'type',
-      'title',
-      'name',
-      'content',
-      'sort',
-      'excerpt',
-      'date',
-      'modified',
-      'parent'
-    ];
+    let fields = [];
+    fields.push('id');
+    fields.push('author');
+    fields.push('status');
+    fields.push('type');
+    fields.push('title');
+    fields.push('name');
+    // fields.push('content');
+    fields.push('sort');
+    fields.push('excerpt');
+    fields.push('date');
+    fields.push('modified');
+    fields.push('parent');
     fields = unique(fields);
 
     if (!think.isEmpty(id)) {
       query.id = id
     }
-    if (!think.isEmpty(type)) {
-      query.type = type
-    }
-    fields.push('content')
-    // 查询单条数据
-    if (!think.isEmpty(id)) {
-      // query = {status: ['NOT IN', 'trash'], _complex: {id: id, parent: id, _logic: 'OR'}}
-      query = {status: ['NOT IN', 'trash'], id: id}
-      return await this.getPodcast(query, fields)
-    } else {
-      const parent = this.get('parent')
-      if (!think.isEmpty(parent)) {
-        query.parent = parent
-      }
-      query.status = ['NOT IN', 'trash']
-      // let queryType = think.isEmpty(status) ? 'publish' : status
-      // let queryType = think.isEmpty(status) ? '' : status
-      if (!think.isEmpty(status)) {
-        if (status === 'my') {
-          // query.status = ['NOT IN', 'trash']
-          query.author = this.ctx.state.user.id
-        }
-        if (status === 'drafts') {
-          query.status = ['like', '%draft%']
-        } else {
-          query.status = status
-        }
-      }
-      return await this.getPodcastList(query, fields)
 
-    }
-    /*
     if (!think.isEmpty(type)) {
       query.type = type;
       switch (query.type) {
         case 'podcast':
-          break;
+          fields.push('content')
+          // 查询单条数据
+          if (!think.isEmpty(id)) {
+            // query = {status: ['NOT IN', 'trash'], _complex: {id: id, parent: id, _logic: 'OR'}}
+            query = {status: ['NOT IN', 'trash'], id: id}
+            return await this.getPodcast(query, fields)
+          } else {
+            const parent = this.get('parent')
+            if (!think.isEmpty(parent)) {
+              query.parent = parent
+            }
+            // let queryType = think.isEmpty(status) ? 'publish' : status
+            // let queryType = think.isEmpty(status) ? '' : status
+            if (!think.isEmpty(status)) {
+              if (status === 'my') {
+                // query.status = ['NOT IN', 'trash']
+                query.author = this.ctx.state.user.id
+              }
+              if (status === 'drafts') {
+                query.status = ['like', '%draft%']
+              } else {
+                query.status = status
+              }
+            }
+            return await this.getPodcastList(query, fields)
+          }
         case "article":
           break;
         case "resume":
@@ -222,7 +155,7 @@ module.exports = class extends BaseRest {
         case "pages":
           break;
       }
-    }*/
+    }
     // 条件查询
     // let list = await this.modelInstance.where(query).field(fields.join(",")).order('modified DESC').page(this.get('page'), 10).countSelect()
     // console.log(JSON.stringify(list))
@@ -337,10 +270,6 @@ module.exports = class extends BaseRest {
         item.featured_image = await metaModel.getAttachment('file', item.meta._thumbnail_id)
         // item.thumbnal = await metaModel.getThumbnail({post_id: item.id})
       }
-
-      // 获取内容的分类信息
-      // const terms = await this.model('taxonomy', {appId: this.appId}).getTermsByObject(query.id)
-      // console.log(JSON.stringify(terms))
     }
     // 处理分类及内容层级
     await this.dealTerms(list)
@@ -379,21 +308,14 @@ module.exports = class extends BaseRest {
     if (think.isEmpty(data.status)) {
       data.status = 'auto-draft';
     }
-    const postId = await this.modelInstance.add(data)
-    // 2 更新 meta 数据
+    const res = await this.modelInstance.add(data)
+    // 更新 meta 图片数据
     if (!Object.is(data.meta, undefined)) {
       const metaModel = await this.model('postmeta', {appId: this.appId})
       // 保存 meta 信息
-      await metaModel.save(postId, data.meta)
+      await metaModel.save(res, data.meta)
     }
-    // 3 添加内容与 term 分类之间的关联
-    if (think.isEmpty(data.term)) {
-      // TODO: 后台可以设置默认分类，暂时设置为1
-      data.term = 1
-    }
-    await this.model('taxonomy', {appId: this.appId}).relationships(postId, data.term)
-
-    return this.success(postId)
+    return this.success(res)
   }
 
   /**
@@ -407,6 +329,7 @@ module.exports = class extends BaseRest {
     const pk = this.modelInstance.pk;
     // const pk = await this.modelInstance.getPk();
     const data = this.post();
+    console.log(JSON.stringify(data))
     // Relation.deleteProperty(data, 'pk')
 // eslint-disable-next-line prefer-reflect
     delete data[pk];
@@ -425,12 +348,6 @@ module.exports = class extends BaseRest {
       // 保存 meta 信息
       await metaModel.save(this.id, data.meta)
     }
-    // if (think.isEmpty(data.term)) {
-    // TODO: 后台可以设置默认分类，暂时设置为1
-    // data.term = 1
-    // }
-    await this.model('taxonomy', {appId: this.appId}).relationships(this.id, data.term)
-
     // return this.success({affectedRows: rows});
     // 返回的状态
     return this.success()

@@ -82,8 +82,6 @@ module.exports = class extends BaseRest {
         // const currentTime = new Date().getTime();
         // data.modified = currentTime
         data.appId = this.appId
-        console.log(data.appId + 'xxxkkkkkk')
-        console.log(JSON.stringify(data))
         await this.DAO.save(data)
         return this.success()
         // const res = await this.DAO.where({id: data.id}).update(data);
@@ -142,18 +140,21 @@ module.exports = class extends BaseRest {
       return this.success(user)
     } else {
       const userIds = await userMeta.where({'meta_key': `picker_${appid}_capabilities`}).select()
-      const ids = []
-      userIds.forEach((item) => {
-        ids.push(item.user_id)
-      })
-      const users = await this.model('users').where({id: ['IN', ids]}).page(this.get('page'), 10).countSelect()
-      _formatMeta(users.data)
-      for (const user of users.data) {
-        if (!think.isEmpty(user.meta.avatar)) {
-          user.avatar = await this.model('postmeta').getAttachment('file', user.meta.avatar)
+      if (!think.isEmpty(userIds)) {
+        const ids = []
+        userIds.forEach((item) => {
+          ids.push(item.user_id)
+        })
+        const users = await this.model('users').where({id: ['IN', ids]}).page(this.get('page'), 10).countSelect()
+        _formatMeta(users.data)
+        for (const user of users.data) {
+          if (!think.isEmpty(user.meta.avatar)) {
+            user.avatar = await this.model('postmeta').getAttachment('file', user.meta.avatar)
+          }
         }
+        return this.success(users)
       }
-      this.success(users)
+      return this.success([])
     }
   }
 }

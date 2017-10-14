@@ -329,7 +329,7 @@ module.exports = class extends BaseRest {
     const pk = this.modelInstance.pk;
     // const pk = await this.modelInstance.getPk();
     const data = this.post();
-    console.log(JSON.stringify(data))
+    // console.log(JSON.stringify(data))
     // Relation.deleteProperty(data, 'pk')
 // eslint-disable-next-line prefer-reflect
     delete data[pk];
