@@ -80,6 +80,7 @@ module.exports = class extends BaseRest {
     return await this.getPodcastList(query, fields)
 
   }
+
   async getObjectsInTerms (termId) {
     const taxonomyModel = this.model('taxonomy', {appId: this.appId})
     const objects = await taxonomyModel.getObjectsInTermsByPage(termId)
@@ -263,6 +264,13 @@ module.exports = class extends BaseRest {
       } else {
         item.authorInfo = await userModel.where({id: item.author}).find()
       }
+      _formatOneMeta(item.authorInfo)
+      if (item.authorInfo.hasOwnProperty('meta')) {
+        if (item.authorInfo.meta.hasOwnProperty('avatar')) {
+          item.authorInfo.avatar = await this.model('postmeta').getAttachment('file', item.authorInfo.meta.avatar)
+        }
+      }
+
       // const user = this.ctx.state.user
       // item.author = user
       // 音频播放的歌词信息

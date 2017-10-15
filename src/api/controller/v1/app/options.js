@@ -1,8 +1,15 @@
 const BaseRest = require('./_rest.js');
 module.exports = class extends BaseRest {
   async getAction() {
-
+    const key = this.get('key')
+    // console.log(key + "xxxxx")
+    // console.log('get options ...')
     let data = await this.modelInstance.get()
+    console.log(JSON.stringify(data))
+    if (!think.isEmpty(key)) {
+      // const option = await think._.findKey(data, key)
+      return this.success(data[key])
+    }
     return this.success(data)
     // let key = this.get('key')
     // let data;
