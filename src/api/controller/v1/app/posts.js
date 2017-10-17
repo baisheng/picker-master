@@ -1,7 +1,23 @@
 /* eslint-disable no-undef,no-return-await,default-case,max-depth,no-warning-comments */
 const BaseRest = require('./_rest')
+let fields = [
+  'id',
+  'author',
+  'status',
+  'type',
+  'title',
+  'name',
+  'content',
+  'sort',
+  'excerpt',
+  'date',
+  'modified',
+  'parent'
+]
 module.exports = class extends BaseRest {
+
   async getAction () {
+    const format = this.get('format')
     const termSlug = this.get('slug')
     if (!think.isEmpty(termSlug)) {
       const term = await this.model('taxonomy', {appId: this.appId}).getTermBySlug(termSlug)
@@ -41,31 +57,13 @@ module.exports = class extends BaseRest {
       return await this.getPodcast(query, fields)
     }
 
-    const parent = this.get('parent')
-    let fields = [
-      'id',
-      'author',
-      'status',
-      'type',
-      'title',
-      'name',
-      'content',
-      'sort',
-      'excerpt',
-      'date',
-      'modified',
-      'parent'
-    ];
-    fields = unique(fields);
+        const parent = this.get('parent')
     let query = {}
     if (!think.isEmpty(parent)) {
       query.parent = parent
-    }
     query.status = ['NOT IN', 'trash']
     const status = this.get('status')
 
-    // let queryType = think.isEmpty(status) ? 'publish' : status
-    // let queryType = think.isEmpty(status) ? '' : status
     if (!think.isEmpty(status)) {
       if (status === 'my') {
         // query.status = ['NOT IN', 'trash']
@@ -78,6 +76,17 @@ module.exports = class extends BaseRest {
       }
     }
     return await this.getPodcastList(query, fields)
+    }
+
+    // if (!think.isEmpty(format)) {
+      const data = await this.getAllFromPage()
+      // return this.success('格式化ovnr')
+      return this.success(data)
+    // }
+
+    // return this.success('默认数据 ')
+
+
 
   }
 
@@ -145,6 +154,59 @@ module.exports = class extends BaseRest {
     return []
   }
 
+  async getAllFromPage () {
+    let query = {}
+    const title = this.get('title')
+    const author = this.get('author')
+    // date query
+    query.status = ['NOT IN', 'trash']
+    const list = await this.modelInstance.where(query).field(fields.join(",")).order('sort ASC').page(this.get('page'), 12).countSelect()
+    _formatMeta(list.data)
+    const metaModel = this.model('postmeta', {appId: this.appId})
+    for (const item of list.data) {
+      item.url = ''
+      // 如果有音频
+      if (!Object.is(item.meta._audio_id, undefined)) {
+        // 音频播放地址
+        item.url = await metaModel.getAttachment('file', item.meta._audio_id)
+      }
+      const userModel = this.model('users');
+      // 如果有作者信息
+      if (!Object.is(item.meta._author_id, undefined)) {
+        const authorInfo = await userModel.where({id: item.meta._author_id}).find()
+        // userInfo.avatar = await this.model('postmeta').getAttachment('file', userInfo.meta.avatar)
+
+        // item.author =
+        item.authorInfo = authorInfo
+        // 查询 出对应的作者信息
+      } else {
+        item.authorInfo = await userModel.where({id: item.author}).find()
+      }
+      _formatOneMeta(item.authorInfo)
+      if (item.authorInfo.hasOwnProperty('meta')) {
+        if (item.authorInfo.meta.hasOwnProperty('avatar')) {
+          item.authorInfo.avatar = await this.model('postmeta').getAttachment('file', item.authorInfo.meta.avatar)
+        }
+      }
+
+      // const user = this.ctx.state.user
+      // item.author = user
+      // 音频播放的歌词信息
+      // lrc
+
+      // 如果有封面 默认是 thumbnail 缩略图，如果是 podcast 就是封面特色图片 featured_image
+      // if (!Object.is(item.meta['_featured_image']))
+      if (!Object.is(item.meta._thumbnail_id, undefined)) {
+        // item.thumbnail = {
+        //   id: item.meta['_thumbnail_id']
+        // }
+        // item.thumbnail.url = await metaModel.getAttachment('file', item.meta['_thumbnail_id'])
+        item.featured_image = await metaModel.getAttachment('file', item.meta._thumbnail_id)
+        // item.thumbnal = await metaModel.getThumbnail({post_id: item.id})
+      }
+    }
+    return list
+  }
   /**
    * 获取分类信息
    * /api/category 获取全部栏目（树结构）

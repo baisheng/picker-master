@@ -16,6 +16,29 @@ module.exports = class extends BaseRest {
       const objects = await this.getObjectsInTermsByLimit(term)
       return this.success(objects)
     }
+
+    const parent = this.get('parent')
+    let query = {}
+    let fields = [];
+    fields.push('id');
+    fields.push('author');
+    fields.push('status');
+    fields.push('type');
+    fields.push('title');
+    fields.push('name');
+    // fields.push('content');
+    fields.push('sort');
+    fields.push('excerpt');
+    fields.push('date');
+    fields.push('modified');
+    fields.push('parent');
+    fields = unique(fields);
+
+    if (!think.isEmpty(parent)) {
+      query.parent = parent
+      return await this.getPodcastList(query, fields)
+    }
+
   }
 
   async getObjectsInTerms (termId) {
@@ -172,9 +195,11 @@ module.exports = class extends BaseRest {
   }
 
   async getPodcastList (query, fields) {
-    const list = await this.modelInstance.where(query).field(fields.join(",")).order('sort ASC').page(this.get('page'), 10).countSelect()
+    const list = await this.model('posts', {appId: this.appId}).where(query).field(fields.join(",")).order('sort ASC').page(this.get('page'), 10).countSelect()
+    // const list = await this.model('posts', {appId: this.appId}).where(query).field(fields.join(",")).order('sort ASC').
     // 处理播放列表音频 Meta 信息
     _formatMeta(list.data)
+    console.log(JSON.stringify(list))
     // 根据 Meta 信息中的音频附件 id 查询出音频地址
     const metaModel = this.model('postmeta', {appId: this.appId})
     for (const item of list.data) {

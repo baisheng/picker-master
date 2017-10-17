@@ -4,6 +4,9 @@ const BaseRest = require('./_rest')
 const jwt = require('jsonwebtoken')
 
 module.exports = class extends BaseRest {
+  async getAction () {
+    return this.success('Hello lets login')
+  }
 /*  async postAction () {
     // if (this.ctx.isPost) {
     const userLogin = this.post('user_login');

@@ -7,6 +7,7 @@ module.exports = [
   [/\/v1\/app\/create?/, '/api/v1/app/public?action=create', 'rest'],
   // 分类方法 api
   [/\/v1\/app\/(\w+)\/taxonomy(?:\/(\w+))?/, '/api/v1/app/taxonomy?appId=:1&type=:2', 'rest'],
+  // [/\/v1\/app\/(\w+)\/posts(?:\/(\w+))?/, '/api/v1/app/posts?appId=:1&format=:2', 'rest'],
   [/\/v1\/app\/(\w+)\/(\w+)(?:\/(\d+))?/, '/api/v1/app/:2?appId=:1&id=:3', 'rest'],
   [/\/v1\/app\/(\w+)?/, '/api/v1/app/public?appId=:1', 'rest'],
   // verify_code,request_code other public action
