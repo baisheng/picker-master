@@ -5,7 +5,7 @@ module.exports = class extends BaseRest {
     // console.log(key + "xxxxx")
     // console.log('get options ...')
     let data = await this.modelInstance.get()
-    console.log(JSON.stringify(data))
+    // console.log(JSON.stringify(data))
     if (!think.isEmpty(key)) {
       // const option = await think._.findKey(data, key)
       return this.success(data[key])

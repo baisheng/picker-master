@@ -29,7 +29,12 @@ module.exports = class extends BaseRest {
     // 查询全部分类
     const term = this.get('term')
     if (!think.isEmpty(term)) {
-      const objects = await this.getObjectsInTermsByLimit(term)
+      const terms = await this.model('taxonomy', {appId: this.appId}).getTerms(term)
+      let cates = []
+      terms.forEach((value) => {
+        cates.push(value.id)
+      })
+      const objects = await this.getObjectsInTerms(cates, this.get('page'))
       return this.success(objects)
     }
 
@@ -57,45 +62,45 @@ module.exports = class extends BaseRest {
       return await this.getPodcast(query, fields)
     }
 
-        const parent = this.get('parent')
+    const parent = this.get('parent')
     let query = {}
     if (!think.isEmpty(parent)) {
       query.parent = parent
-    query.status = ['NOT IN', 'trash']
-    const status = this.get('status')
+      query.status = ['NOT IN', 'trash']
+      const status = this.get('status')
 
-    if (!think.isEmpty(status)) {
-      if (status === 'my') {
-        // query.status = ['NOT IN', 'trash']
-        query.author = this.ctx.state.user.id
+      if (!think.isEmpty(status)) {
+        if (status === 'my') {
+          // query.status = ['NOT IN', 'trash']
+          query.author = this.ctx.state.user.id
+        }
+        if (status === 'drafts') {
+          query.status = ['like', '%draft%']
+        } else {
+          query.status = status
+        }
       }
-      if (status === 'drafts') {
-        query.status = ['like', '%draft%']
-      } else {
-        query.status = status
-      }
-    }
-    return await this.getPodcastList(query, fields)
+      return await this.getPodcastList(query, fields)
     }
 
     // if (!think.isEmpty(format)) {
-      const data = await this.getAllFromPage()
-      // return this.success('格式化ovnr')
-      return this.success(data)
+    const data = await this.getAllFromPage()
+    // return this.success('格式化ovnr')
+    return this.success(data)
     // }
 
     // return this.success('默认数据 ')
 
 
-
   }
 
-  async getObjectsInTerms (termId) {
+  async getObjectsInTerms (termIds, page) {
     const taxonomyModel = this.model('taxonomy', {appId: this.appId})
-    const objects = await taxonomyModel.getObjectsInTermsByPage(termId)
-    if (!think.isEmpty(objects)) {
+    const objects = await taxonomyModel.getObjectsInTermsByPage(termIds, page)
+    console.log(JSON.stringify(objects))
+    if (!think.isEmpty(objects) && objects.ids.length > 0) {
       const postsModel = this.model('posts', {appId: this.appId})
-      const podcasts = await postsModel.where({id: ['IN', objects]}).select();
+      const podcasts = await postsModel.where({id: ['IN', objects.ids]}).select();
       const metaModel = this.model('postmeta', {appId: this.appId})
       _formatMeta(podcasts)
 
@@ -116,10 +121,15 @@ module.exports = class extends BaseRest {
           item.featured_image = await metaModel.getAttachment('file', item.meta._thumbnail_id)
         }
       }
-
-      return podcasts
+      // return {
+      // "count":21,"totalPages":3,"pagesize":10,"currentPage":1,
+      // }
+      Reflect.deleteProperty(objects, 'ids')
+      return think.extend({}, objects, {data: podcasts})
+      // return Object.assign({}, podcasts, objects)
     }
-    return []
+    Reflect.deleteProperty(objects, 'ids')
+    return think.extend({}, objects, {data: []})
   }
 
   async getObjectsInTermsByLimit (terms) {
@@ -207,6 +217,7 @@ module.exports = class extends BaseRest {
     }
     return list
   }
+
   /**
    * 获取分类信息
    * /api/category 获取全部栏目（树结构）

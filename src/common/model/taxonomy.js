@@ -66,24 +66,23 @@ module.exports = class extends Base {
    * @param page
    * @returns {Promise.<*>}
    */
-  async getObjectsInTermsByPage (term_ids, taxonomies = 'category', page) {
+  async getObjectsInTermsByPage (term_ids, page = 1, taxonomies = 'category') {
     const _term_relationships = this.model("term_relationships", {appId: this.appId})
     let objects
-
-    if (think.isEmpty(page)) {
-      objects = await _term_relationships.join({
-        table: "term_taxonomy",
-        join: "inner",
-        as: "tt",
-        on: ["term_taxonomy_id", "term_id"]
-
-      }).field("object_id").where("tt.taxonomy IN ('" + taxonomies + "') AND tt.term_id IN (" + term_ids + ")").select();
-      let ids = [];
-      for (let obj of objects) {
-        ids.push(obj.object_id);
-      }
-      return ids;
-    }
+    // if (think.isEmpty(page)) {
+    //   objects = await _term_relationships.join({
+    //     table: "term_taxonomy",
+    //     join: "inner",
+    //     as: "tt",
+    //     on: ["term_taxonomy_id", "term_id"]
+    //
+    //   }).field("object_id").where("tt.taxonomy IN ('" + taxonomies + "') AND tt.term_id IN (" + term_ids + ")").select();
+    //   let ids = [];
+    //   for (let obj of objects) {
+    //     ids.push(obj.object_id);
+    //   }
+    //   return ids;
+    // }
 
     objects = await _term_relationships.join({
       table: "term_taxonomy",
@@ -92,6 +91,7 @@ module.exports = class extends Base {
       on: ["term_taxonomy_id", "term_id"]
 
     }).field("object_id").where("tt.taxonomy IN ('" + taxonomies + "') AND tt.term_id IN (" + term_ids + ")").order('object_id DESC').page(page, 10).countSelect();
+
     const ids = [];
     for (let obj of objects.data) {
       ids.push(obj.object_id);

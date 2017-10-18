@@ -3,6 +3,9 @@
 const Base = require('./base');
 
 module.exports = class extends Base {
+  get pk() {
+    return 'object_id';
+  }
   // constructor(...args) {
   //   super(...args);
   //   this.orgId = ''
