@@ -18,7 +18,9 @@ module.exports = class extends BaseRest {
 
   async getAction () {
     const format = this.get('format')
-    const termSlug = this.get('slug')
+    const termId = this.get('termId')
+    const termSlug = this.get('termSlug')
+
     if (!think.isEmpty(termSlug)) {
       const term = await this.model('taxonomy', {appId: this.appId}).getTermBySlug(termSlug)
       if (!think.isEmpty(term)) {
@@ -26,10 +28,16 @@ module.exports = class extends BaseRest {
         return this.success(objects)
       }
     }
-    // 查询全部分类
-    const term = this.get('term')
-    if (!think.isEmpty(term)) {
-      const terms = await this.model('taxonomy', {appId: this.appId}).getTerms(term)
+    // 查询内容按分类 id 为首页使用 查询 6 条
+    if (!think.isEmpty(termId)) {
+      const objects = await this.getObjectsInTermsByLimit(termId)
+      return this.success(objects)
+    }
+
+    // 查询全部分类按分类方法
+    const taxonomy = this.get('term')
+    if (!think.isEmpty(taxonomy)) {
+      const terms = await this.model('taxonomy', {appId: this.appId}).getTerms(taxonomy)
       let cates = []
       terms.forEach((value) => {
         cates.push(value.id)
@@ -115,7 +123,12 @@ module.exports = class extends BaseRest {
         } else {
           item.authorInfo = await userModel.where({id: item.author}).find()
         }
-
+        _formatOneMeta(item.authorInfo)
+        if (item.authorInfo.hasOwnProperty('meta')) {
+          if (item.authorInfo.meta.hasOwnProperty('avatar')) {
+            item.authorInfo.avatar = await this.model('postmeta').getAttachment('file', item.authorInfo.meta.avatar)
+          }
+        }
         // 如果有封面 默认是 thumbnail 缩略图，如果是 podcast 就是封面特色图片 featured_image
         if (!Object.is(item.meta._thumbnail_id, undefined)) {
           item.featured_image = await metaModel.getAttachment('file', item.meta._thumbnail_id)

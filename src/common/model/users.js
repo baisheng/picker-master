@@ -1,4 +1,4 @@
-/* eslint-disable prefer-promise-reject-errors,no-console,prefer-promise-reject-errors,prefer-promise-reject-errors */
+/* eslint-disable prefer-promise-reject-errors,no-console,prefer-promise-reject-errors,prefer-promise-reject-errors,no-warning-comments */
 const Base = require('./base');
 const {PasswordHash} = require('phpass');
 
@@ -65,13 +65,13 @@ module.exports = class extends Base {
    * @param data
    * @returns {Promise.<*>}
    */
-  async addWxAppUser (data) {
+  async saveWechatUser (data) {
     const createTime = new Date().getTime();
     const res = await this.where({
-      user_login: data.user_login
+      user_login: data.openId
     }).thenAdd({
-      user_login: data.user_login,
-      user_nicename: data.user_nicename,
+      user_login: data.openId,
+      user_nicename: data.nickName,
       user_registered: createTime,
       user_status: 1
     });
@@ -86,14 +86,14 @@ module.exports = class extends Base {
           meta_value: JSON.stringify({"role": role})
         }, {appId: data.appId})
 
-        if (!think.isEmpty(data.wxapp)) {
-          await usermeta.add({
-            user_id: res.id,
-            meta_key: `picker_${data.appId}_wxapp`,
-            meta_value: JSON.stringify(data.wxapp)
-          })
-        }
+        await usermeta.add({
+          user_id: res.id,
+          // 用于标识用户类型
+          meta_key: `picker_${data.appId}_wechat`,
+          meta_value: JSON.stringify(data)
+        })
       }
+      // TODO: basi 2017.10.19 这里会有更新操作，如果同一用户授权我们服务的其它应用，就要更新关联的应用
     }
     return res
   }

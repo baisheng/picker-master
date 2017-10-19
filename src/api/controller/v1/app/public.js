@@ -1,5 +1,9 @@
 /* eslint-disable no-return-await */
 const BaseRest = require('./_rest.js');
+const Redis = require('ioredis')
+const redis = new Redis()
+const jwt = require('jsonwebtoken')
+
 module.exports = class extends BaseRest {
   async getAction () {
     const appsModel = this.model('apps')
@@ -14,6 +18,7 @@ module.exports = class extends BaseRest {
     const action = this.get('action')
     const data = this.post()
 
+    // console.log(action + "------")
     switch (action) {
       case 'create': {
         const orgId = data.org_id
@@ -23,11 +28,28 @@ module.exports = class extends BaseRest {
         const type = data.type
         return await this.installApp(orgId, type)
       }
+      case 'wxlogin': {
+        const xWechatCode = this.header('x-wechat-code')
+        const encrypted = this.header('x-wechat-encrypted')
+        const iv = this.header('x-wechat-iv')
+        if (think.isEmpty(xWechatCode) || think.isEmpty(encrypted) || think.isEmpty(iv)) {
+          return this.fail('登录协议处理错误!')
+        }
+        const token = await this.wxLogin(xWechatCode, encrypted, iv)
+        return this.success({token: token});
+      }
       default: {
         break
       }
     }
   }
+
+  /**
+   * 安装应用，初始化表与数据
+   * @param orgId
+   * @param type
+   * @returns {Promise.<*>}
+   */
   async installApp (orgId, type) {
     const appId = think.id.generate()
     // 应用数据表创建
@@ -59,4 +81,44 @@ module.exports = class extends BaseRest {
       return this.fail(res)
     }
   }
-};
+
+  /**
+   * x-wechat-code : 微信登录的 code
+   * x-wechat-encrypted : 微信登录后已加密的用户信息
+   * x-wechat-iv: 解密向量
+   *
+   * @returns {Promise.<void>}
+   */
+  async wxLogin (code, encrypted, iv) {
+
+    const data = this.post()
+    const options = await this.model('options', {appId: this.appId}).get()
+    const wxConfig = options.wechat
+    if (!think.isEmpty(wxConfig)) {
+      const wxService = think.service('wechat', 'common', wxConfig.appid, wxConfig.appsecret)
+      /*
+        "openId": "oQgDx0IVqAg0b3GibFYBdtg3BKMA",
+        "nickName": "请好好说话🌱",
+        "gender": 1,
+        "language": "en",
+        "city": "Chaoyang",
+        "province": "Beijing",
+        "country": "China",
+        "avatarUrl": "https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83ep0GdQEHK3tYdvq3DTMVhsdiaviaLg6b7CdDBLOYSWDGYOEtS7FFmvhd6CGCuQVfe4Rb0uQUlaq7XoA/0",
+        "watermark": {
+            "timestamp": 1508409692,
+            "appid": "wxca1f2b8b273d909e"
+        }
+      */
+      let wxUserInfo = await wxService.getUserInfo(encrypted, iv, code)
+      wxUserInfo = think.extend({}, wxUserInfo, {appId: this.appId})
+      // console.log(JSON.stringify(wxUserInfo))
+      // 验证用户或保存为新用户
+      const userModel = this.model('users')
+      const token = jwt.sign(wxUserInfo, 'S1BNbRp2b')
+      await userModel.saveWechatUser(wxUserInfo)
+
+      return token
+    }
+  }
+}

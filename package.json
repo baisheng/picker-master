@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "aliyun-dysms-sdk": "^1.0.0",
+    "crypto": "^1.0.1",
+    "httpx": "^2.1.2",
     "jsonwebtoken": "^8.1.0",
     "kcors": "^2.2.1",
     "koa-jwt": "^3.2.2",
@@ -17,6 +19,7 @@
     "moment": "^2.19.1",
     "phpass": "^0.1.1",
     "qiniu": "^7.0.9",
+    "querystring": "^0.2.0",
     "semver": "^5.4.1",
     "shortid": "^2.2.8",
     "think-cache": "^1.0.0",

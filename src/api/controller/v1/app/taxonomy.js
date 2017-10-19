@@ -11,8 +11,6 @@ module.exports = class extends BaseRest {
       return this.success(term)
     }
     const type = this.get('type')
-    console.log('lalaa---')
-    console.log('lalaa---' + type)
     // 根据分类的分类方法获取分类
     if (!think.isEmpty(type)) {
       const terms = await this.getTermsByTaxonomy(type)
