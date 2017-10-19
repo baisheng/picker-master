@@ -19,13 +19,17 @@ module.exports = class extends BaseRest {
   async getAction () {
     const format = this.get('format')
     const termId = this.get('termId')
-    const termSlug = this.get('termSlug')
+    const termSlug = this.get('term_slug')
 
     if (!think.isEmpty(termSlug)) {
+      console.log('ter slug ' + termSlug)
+      // 根据 slug 取 termId
       const term = await this.model('taxonomy', {appId: this.appId}).getTermBySlug(termSlug)
       if (!think.isEmpty(term)) {
         const objects = await this.getObjectsInTerms(term.id)
         return this.success(objects)
+      } else {
+        return this.success()
       }
     }
     // 查询内容按分类 id 为首页使用 查询 6 条
@@ -104,8 +108,7 @@ module.exports = class extends BaseRest {
 
   async getObjectsInTerms (termIds, page) {
     const taxonomyModel = this.model('taxonomy', {appId: this.appId})
-    const objects = await taxonomyModel.getObjectsInTermsByPage(termIds, page)
-    console.log(JSON.stringify(objects))
+    const objects = await taxonomyModel.getObjectsInTermsByPage(termIds, page, this.get('pagesize'))
     if (!think.isEmpty(objects) && objects.ids.length > 0) {
       const postsModel = this.model('posts', {appId: this.appId})
       const podcasts = await postsModel.where({id: ['IN', objects.ids]}).select();

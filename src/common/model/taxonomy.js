@@ -64,9 +64,11 @@ module.exports = class extends Base {
    * @param term_ids
    * @param taxonomies
    * @param page
+   * @param limit
    * @returns {Promise.<*>}
    */
-  async getObjectsInTermsByPage (term_ids, page = 1, taxonomies = 'category') {
+  async getObjectsInTermsByPage (term_ids, page = 1, pagesize = 10, taxonomies = 'category') {
+    console.log('llll分类法查找 ')
     const _term_relationships = this.model("term_relationships", {appId: this.appId})
     let objects
     // if (think.isEmpty(page)) {
@@ -90,7 +92,7 @@ module.exports = class extends Base {
       as: "tt",
       on: ["term_taxonomy_id", "term_id"]
 
-    }).field("object_id").where("tt.taxonomy IN ('" + taxonomies + "') AND tt.term_id IN (" + term_ids + ")").order('object_id DESC').page(page, 10).countSelect();
+    }).field("object_id").where("tt.taxonomy IN ('" + taxonomies + "') AND tt.term_id IN (" + term_ids + ")").order('object_id DESC').page(page, pagesize).countSelect();
 
     const ids = [];
     for (let obj of objects.data) {
@@ -214,7 +216,10 @@ module.exports = class extends Base {
   async getTermBySlug (slug) {
     const terms = await this.allTerms()
     const term = await think._.find(terms, ['slug', slug]);
-    return term
+    if (!think.isEmpty(term)) {
+      return term
+    }
+    return []
   }
 
   /**
