@@ -78,12 +78,12 @@ module.exports = class extends Base {
     // Add user meta info
     if (!think.isEmpty(res)) {
       if (res.type === 'add') {
-        const role = think.isEmpty(data.role) ? 'subscriber' : data.role
+        // const role = think.isEmpty(data.role) ? 'subscriber' : data.role
         const usermeta = this.model('usermeta')
         await usermeta.add({
           user_id: res.id,
           meta_key: data.appId ? `picker_${data.appId}_capabilities` : '_capabilities',
-          meta_value: JSON.stringify({"role": role})
+          meta_value: JSON.stringify({'role': 'subscriber', 'type': 'wechat'})
         }, {appId: data.appId})
 
         await usermeta.add({
@@ -124,7 +124,7 @@ module.exports = class extends Base {
           await usermeta.add({
             user_id: res.id,
             meta_key: data.appId ? `picker_${data.appId}_capabilities` : '_capabilities',
-            meta_value: JSON.stringify({"role": role})
+            meta_value: JSON.stringify({'role': role, 'type': 'team'})
           }, {appId: data.appId})
           // 后续这里的用户简介可以处理与 resume 模型关联
           if (!think.isEmpty(data.summary)) {
@@ -170,7 +170,6 @@ module.exports = class extends Base {
         }
       }
       updateData.last_login_time = new Date().getTime();
-      console.log(JSON.stringify(updateData))
 
       // updateData.last_login_ip = ip;
       const res = await this.where({id: data.id}).update(updateData);
@@ -180,7 +179,7 @@ module.exports = class extends Base {
         await usermeta.add({
           user_id: res.id,
           meta_key: data.appId ? `picker_${data.appId}_capabilities` : '_capabilities',
-          meta_value: JSON.stringify({"role": role})
+          meta_value: JSON.stringify({'role': role, 'type': 'team'})
         }, {appId: data.appId})
         // 后续这里的用户简介可以处理与 resume 模型关联
         if (!think.isEmpty(data.summary)) {
@@ -227,7 +226,7 @@ module.exports = class extends Base {
         await usermeta.add({
           user_id: res.id,
           meta_key: data.appid ? `picker_${data.appid}_capabilities` : '_capabilities',
-          meta_value: JSON.stringify({"role": role})
+          meta_value: JSON.stringify({'role': role, 'type': 'team'})
         }, {appId: this.appId})
         // 后续这里的用户简介可以处理与 resume 模型关联
         if (!think.isEmpty(data.summary)) {
@@ -270,7 +269,7 @@ module.exports = class extends Base {
         await usermeta.add({
           user_id: res.id,
           meta_key: `org_${data.org_id}_capabilities`,
-          meta_value: JSON.stringify({"role": role})
+          meta_value: JSON.stringify({'role': role, 'type': 'org'})
         }, {appId: this.appId})
         // 后续这里的用户简介可以处理与 resume 模型关联
         if (!think.isEmpty(data.summary)) {

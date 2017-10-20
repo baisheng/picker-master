@@ -13,5 +13,6 @@ module.exports = [
   [/\/v1\/app\/(\w+)\/(\w+)(?:\/(\d+))?/, '/api/v1/app/:2?appId=:1&id=:3', 'rest'],
   // [/\/v1\/app\/(\w+)?/, '/api/v1/app/public?appId=:1', 'rest'],
   // verify_code,request_code other public action
+  [/\/v1\/file?/, '/api/v1/file', 'rest'],
   [/\/v1(?:\/(\w+))?/, '/api/v1/public?action=:1', 'rest'],
 ]

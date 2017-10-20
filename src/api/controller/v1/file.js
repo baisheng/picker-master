@@ -3,12 +3,12 @@ const path = require('path');
 const fs = require('fs')
 // const sharp = require('sharp')
 // const mediaTags = require("jsmediatags")
-const BaseRest = require('./_rest')
-module.exports = class extends BaseRest {
+// const BaseRest = require('./_rest')
+module.exports = class extends think.Controller  {
 
   async postAction () {
-    const postModel = this.model('posts', {appId: this.appId})
-    const optionsModel = this.model('options', {appId: this.appId})
+    const postModel = this.model('posts')
+    const optionsModel = this.model('options')
     // 获取 当前用户配置
     const option = await optionsModel.get(true)
     let config = option.upload
@@ -18,7 +18,6 @@ module.exports = class extends BaseRest {
       config = option.upload
     }
     const httpx = config.option.ssl ? 'https' : 'http'
-    console.log(config.option.ssl + "-------")
 
     // 获取 文件信息
     const file = think.extend({}, this.file('file'))

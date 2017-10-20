@@ -18,11 +18,10 @@ module.exports = class extends BaseRest {
 
   async getAction () {
     const format = this.get('format')
-    const termId = this.get('termId')
+    const termId = this.get('term_id')
     const termSlug = this.get('term_slug')
 
     if (!think.isEmpty(termSlug)) {
-      console.log('ter slug ' + termSlug)
       // 根据 slug 取 termId
       const term = await this.model('taxonomy', {appId: this.appId}).getTermBySlug(termSlug)
       if (!think.isEmpty(term)) {

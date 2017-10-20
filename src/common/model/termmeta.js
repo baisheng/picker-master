@@ -14,4 +14,13 @@ module.exports = class extends Base {
   // get tablePrefix() {
   //   return 'picker_'+ this.orgId;
   // }
+  async save (term_id, meta) {
+    for (const key of Object.keys(meta)) {
+      await this.thenUpdate({
+        'term_id': term_id,
+        'meta_key': key,
+        'meta_value': meta[key] + ''
+      }, {term_id: term_id, meta_key: key})
+    }
+  }
 }

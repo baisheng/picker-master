@@ -18,7 +18,6 @@ module.exports = class extends BaseRest {
     const action = this.get('action')
     const data = this.post()
 
-    // console.log(action + "------")
     switch (action) {
       case 'create': {
         const orgId = data.org_id

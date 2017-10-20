@@ -131,25 +131,41 @@ module.exports = class extends BaseRest {
     const userId = this.get('id')
     const appid = this.get('appId')
     const userMeta = this.model('usermeta')
-    // 单用户
+    const type = this.get('type')
+
+    // 根据 id 获取单用户
     if (!think.isEmpty(userId)) {
       const user = await this.model('users').where({id: userId}).find()
       _formatOneMeta(user)
-      // 处理人员头像地址
-      user.avatar = await this.model('postmeta').getAttachment('file', user.meta.avatar)
+      if (!think.isEmpty(user.meta[`picker_${appid}_wechat`])) {
+        user.avatar = user.meta[`picker_${appid}_wechat`].avatarUrl
+        // user.type = 'wechat'
+      } else {
+        user.avatar = await this.model('postmeta').getAttachment('file', user.meta.avatar)
+      }
       return this.success(user)
     } else {
-      const userIds = await userMeta.where({'meta_key': `picker_${appid}_capabilities`}).select()
+      let type = this.get('type')
+      if (think.isEmpty(type)) {
+        type = 'team'
+      }
+      // 获取用户默认获取团队成员
+      // const userIds = await userMeta.where(query).select()
+      const userIds = await userMeta.where(`meta_value ->'$.type' = '${type}' and meta_key = 'picker_${appid}_capabilities'`).select()
+
       if (!think.isEmpty(userIds)) {
         const ids = []
         userIds.forEach((item) => {
           ids.push(item.user_id)
         })
-        const users = await this.model('users').where({id: ['IN', ids]}).page(this.get('page'), 10).countSelect()
+        const users = await this.model('users').where({id: ['IN', ids]}).page(this.get('page'), 50).countSelect()
         _formatMeta(users.data)
         for (const user of users.data) {
           if (!think.isEmpty(user.meta.avatar)) {
             user.avatar = await this.model('postmeta').getAttachment('file', user.meta.avatar)
+          } else if (!think.isEmpty(user.meta[`picker_${appid}_wechat`])) {
+            user.avatar = user.meta[`picker_${appid}_wechat`].avatarUrl
+            // user.type = 'wechat'
           }
         }
         return this.success(users)

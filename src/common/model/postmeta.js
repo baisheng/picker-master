@@ -43,7 +43,6 @@ module.exports = class extends Base {
         'meta_value': meta[key] + ''
       }, {post_id: post_id, meta_key: key})
     }
-
   }
 
 

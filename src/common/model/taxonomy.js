@@ -68,7 +68,7 @@ module.exports = class extends Base {
    * @returns {Promise.<*>}
    */
   async getObjectsInTermsByPage (term_ids, page = 1, pagesize = 10, taxonomies = 'category') {
-    console.log('llll分类法查找 ')
+    // console.log('llll分类法查找 ')
     const _term_relationships = this.model("term_relationships", {appId: this.appId})
     let objects
     // if (think.isEmpty(page)) {
@@ -112,19 +112,19 @@ module.exports = class extends Base {
   async getTermsByObject (object_id) {
 
     // 从缓存中提取到所有 term
-    let all_terms = await this.allTerms();
+    const all_terms = await this.allTerms();
 
-    let _term_relationships = this.model("term_relationships", {appId: this.appId});
+    const _term_relationships = this.model("term_relationships", {appId: this.appId});
 
     // 查询内容关联的分类法 id == term_id
-    let taxonomies = await _term_relationships.field('term_taxonomy_id as term_id').where({"object_id": object_id}).select();
+    const taxonomies = await _term_relationships.field('term_taxonomy_id as term_id').where({"object_id": object_id}).select();
 
     /**
      * 按 term_id 查询 term
      * @type {Array}
      * @private
      */
-    let _terms = [];
+    const _terms = [];
     taxonomies.forEach((item) => {
       _terms.push(think._.filter(all_terms, {id: item.term_id}));
     });
@@ -215,7 +215,7 @@ module.exports = class extends Base {
 
   async getTermBySlug (slug) {
     const terms = await this.allTerms()
-    const term = await think._.find(terms, ['slug', slug]);
+    const term = await think._.find(terms, ['slug', slug])
     if (!think.isEmpty(term)) {
       return term
     }
