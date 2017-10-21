@@ -93,15 +93,21 @@ module.exports = class extends Base {
       on: ["term_taxonomy_id", "term_id"]
 
     }).field("object_id").where("tt.taxonomy IN ('" + taxonomies + "') AND tt.term_id IN (" + term_ids + ")").order('object_id DESC').page(page, pagesize).countSelect();
-
+    // console.log(JSON.stringify(objects.data))
     const ids = [];
-    for (let obj of objects.data) {
+    // objects.data.forEach((value) => {
+    //   console.log(value.object_id + '-----')
+    //   ids.unshift(value.object_id);
+    // })
+    for (const obj of objects.data) {
       ids.push(obj.object_id);
     }
+    // ids.reverse()
     Reflect.deleteProperty(objects, 'data')
     // delete objects.data;
     objects.ids = ids;
-
+    // objects.ids = objects.ids.reverse()
+    // console.log(ids)
     return objects;
   }
 

@@ -110,7 +110,7 @@ module.exports = class extends BaseRest {
     const objects = await taxonomyModel.getObjectsInTermsByPage(termIds, page, this.get('pagesize'))
     if (!think.isEmpty(objects) && objects.ids.length > 0) {
       const postsModel = this.model('posts', {appId: this.appId})
-      const podcasts = await postsModel.where({id: ['IN', objects.ids]}).select();
+      const podcasts = await postsModel.where({id: ['IN', objects.ids]}).order('id DESC').select();
       const metaModel = this.model('postmeta', {appId: this.appId})
       _formatMeta(podcasts)
 
@@ -470,7 +470,7 @@ module.exports = class extends BaseRest {
     data.date = currentTime
     data.modified = currentTime
     if (think.isEmpty(data.author)) {
-      data.author = this.ctx.state.user.id
+      data.author = this.ctx.state.user.userInfo.id
     }
     if (think.isEmpty(data.status)) {
       data.status = 'auto-draft';
