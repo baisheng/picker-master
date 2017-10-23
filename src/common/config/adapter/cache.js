@@ -4,7 +4,7 @@ const isDev = think.env === 'development'
 module.exports = {
   type: 'redis',
   common: {
-    timeout: 24 * 3600 * 1000 // millisecond
+    timeout: 72 * 3600 * 1000 // millisecond
   },
   redis: {
     handle: redisCache,

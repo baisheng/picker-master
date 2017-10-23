@@ -1,7 +1,9 @@
-/* eslint-disable no-undef */
+/* eslint-disable no-undef,no-return-await */
 const BaseRest = require('./_rest')
 // import speakeasy from 'speakeasy';
 const jwt = require('jsonwebtoken')
+const crypto = require('crypto')
+const sha1 = crypto.createHash('sha1')
 
 module.exports = class extends BaseRest {
   async getAction () {
@@ -55,6 +57,14 @@ module.exports = class extends BaseRest {
           }
           return this.success({verify: 'success'})
         })
+      }
+
+      if (data.action === 'check_user_info') {
+        return await this.checkUserInfo()
+      }
+
+      if (data.action === 'decode_userinfo') {
+        return await this.decodeUserInfo()
       }
     }
     // const xWechatCode = this.header('x-wechat-code')
@@ -156,12 +166,76 @@ module.exports = class extends BaseRest {
     }
   }
 
-  async wxLogin (code) {
-
+  async decodeUserInfo () {
+    const data = this.post()
+    const user_login = this.ctx.state.user.user_login
     const options = await this.model('options', {appId: this.appId}).get()
     const wxConfig = options.wechat
     if (!think.isEmpty(wxConfig)) {
-      const wxService = think.service('wechat', 'common', wxConfig.appid, wxConfig.appsecret)
+      const wxService = think.service('wechat', 'common', wxConfig.appid, wxConfig.appsecret,
+        async (openid) => {
+// eslint-disable-next-line no-return-await
+          return await think.cache(openid)
+        },
+        async (openid, sessionkey) => {
+          await think.cache(openid, sessionkey)
+        })
+      let wxUserInfo = await wxService.getUserInfo(data.encryptedData, data.iv, user_login)
+      return this.success(wxUserInfo)
+    }
+  }
+
+  async checkUserInfo () {
+    const data = this.post()
+    // { action: 'check_user_info',
+    //   rawData: '{"nickName":"请好好说话🌱","gender":1,"language":"en","city":"Chaoyang","province":"Beijing","cy":"China","avatarUrl":"https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83ep0GdQEHK3tYdvq3DTMVhsdiaviaLg6b7CdDBLOYSWDGYOEtS7FFmvhd6CGCuQVfe4Rb0uQUlaq7XoA/0"}',
+    //   signature: 'e9dfe22dfb4fbbad0ec359cb498915b84860295d' }
+    const signature1 = data.signature
+    const rawData = data.rawData
+    try {
+      const user_login = this.ctx.state.user.user_login
+      sha1.update(rawData.toString())
+      const wxUser = await think.cache(user_login)
+      sha1.update(wxUser.session_key)
+      const signature2 = sha1.digest('hex')
+      if (signature1 === signature2) {
+        return this.success()
+      } else {
+        throw new Error('Signature Error')
+      }
+    } catch (e) {
+      throw new Error('Signature Error')
+    }
+  }
+
+  async wxService () {
+    const options = await this.model('options', {appId: this.appId}).get()
+    const wxConfig = options.wechat
+    if (!think.isEmpty(wxConfig)) {
+      const wxService = think.service('wechat', 'common', wxConfig.appid, wxConfig.appsecret,
+        async (openid) => {
+// eslint-disable-next-line no-return-await
+          return await think.cache(openid)
+        },
+        async (openid, sessionkey) => {
+          await think.cache(openid, sessionkey)
+        })
+      return wxService
+    }
+  }
+
+  async wxLogin (code) {
+    const options = await this.model('options', {appId: this.appId}).get()
+    const wxConfig = options.wechat
+    if (!think.isEmpty(wxConfig)) {
+      const wxService = think.service('wechat', 'common', wxConfig.appid, wxConfig.appsecret,
+        async (openid) => {
+          // eslint-disable-next-line no-return-await
+          return await think.cache(openid)
+        },
+        async (openid, sessionkey) => {
+          await think.cache(openid, sessionkey)
+        })
       /*
         "openId": "oQgDx0IVqAg0b3GibFYBdtg3BKMA",
         "nickName": "请好好说话🌱",

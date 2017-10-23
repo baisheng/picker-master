@@ -65,7 +65,7 @@ module.exports = [
       secret: 'S1BNbRp2b'
     },
     match: ctx => { // match 为一个函数，将 ctx 传递给这个函数，如果返回结果为 true，则启用该 middleware
-      if (ctx.url.match(ctx.url.match(/^\/v1\/org\/\d+(?:\/subdomain_validation|signin|signout)?/) || ctx.url.match(/^\/v1\/app\/\w+\/options?/) || ctx.url.match(/^\/v1\/app\/\w+\/auth?/))) {
+      if (ctx.url.match(ctx.url.match(/^\/v1\/org\/\d+(?:\/subdomain_validation|signin|signout)?/) || ctx.url.match(/^\/v1\/app\/\w+\/options?/) || ctx.url.match(/^\/v1\/app\/\w+\/auth\/token?/))) {
         return false;
       } else if (ctx.url.match(ctx.url.match(/^\/v1*?/))) {
         console.log(ctx.url)

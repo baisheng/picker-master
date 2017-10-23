@@ -33,6 +33,7 @@ module.exports = class extends think.Service {
       console.warn('Please dont save session key into memory under production')
     }
     this.saveSessionKey = saveSessionKey || async function (openid, session_key) {
+      console.log(openid + '----' + session_key)
       this.store[openid] = session_key
     }
     this.defaults = {}
@@ -148,20 +149,20 @@ module.exports = class extends think.Service {
     // }
   }
 
-  async getUserInfo (encrypted_data, iv, code) {
+  async getUserInfo (encrypted_data, iv, openid) {
     // if (typeof options !== 'object') {
     //   options = {
     //     openid: options
     //   }
     // }
-    // const data = await this.getSessionKey(options.openid)
-    // if (!data) {
-    //   let error = new Error('No SessionKey for ' + options.openid + ', please authorize first.')
-    //   error.name = 'NoSessionKeyError'
-    //   throw error
-    // }
-    const session_info = await this.getKey(code)
-    const crypt = new WXBizDataCrypt(this.appid, session_info.data.session_key)
+    const data = await this.getSessionKey(openid)
+    if (!data) {
+      let error = new Error('No SessionKey for ' + openid + ', please authorize first.')
+      error.name = 'NoSessionKeyError'
+      throw error
+    }
+    // const session_info = await this.getKey(code)
+    const crypt = new WXBizDataCrypt(this.appid, data.session_key)
     const info = crypt.decryptData(encrypted_data, iv)
     return info
   }
