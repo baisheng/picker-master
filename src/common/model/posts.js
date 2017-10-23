@@ -18,7 +18,7 @@ module.exports = class extends Base {
   //   };
   // }
 
-  get relation() {
+  get relation () {
     return {
       // children: {
       //   type:think.Model.HAS_MANY,
@@ -45,7 +45,7 @@ module.exports = class extends Base {
    * @param unique
    * @returns {Promise.<*>}
    */
-  async addMeta(post_id, meta_key, meta_value, unique = false) {
+  async addMeta (post_id, meta_key, meta_value, unique = false) {
     let _metaModel = this.model('postmeta', {appId: this.appId})
     let _id = await _metaModel.add({
       post_id: post_id,
@@ -55,15 +55,33 @@ module.exports = class extends Base {
     return _id
   }
 
+  async getList (page = 1, pagesize = 10) {
+    // SELECT p.id, p.title, p.content FROM picker_S11SeYT2W_posts as p LEFT JOIN picker_S11SeYT2W_term_relationships AS tt ON p.id=tt.object_id
+    // LEFT JOIN picker_S11SeYT2W_term_taxonomy as tr on tt.term_taxonomy_id = tr.term_id where tr.term_id IN(1, 3, 4) and tr.taxonomy = 'category' and p.status = 'publish' order by id desc;
+    // SELECT * FROM think_user AS a LEFT JOIN `think_cate` AS c ON a.`id`=c.`id` LEFT JOIN `think_group_tag` AS d ON a.`id`=d.`group_id`
+    return this.alias('p').join({
+      term_relationships: {
+        join: 'left', // 有 left,right,inner 3 个值
+        as: 'tt',
+        on: ['p.id', 'tt.object_id']
+      },
+      term_taxonomy: {
+        join: 'left',
+        as: 'tr',
+        on: ['tr.term_id', 'tt.term_taxonomy_id']
+      }
+    }).field('p.id, p.author, p.title, p.status, p.content, p.modified, p.parent').where(`tr.term_id IN(1, 3, 4) AND tr.taxonomy = 'category' AND p.status = 'publish'`).order('p.id DESC').page(page, pagesize).countSelect()
+  }
+
   // async update (data) {
-    // return await super.update(data, this.options)
-    // if (!Object.is(data['featured_image'], undefined)) {
-    //   console.log(JSON.stringify(data))
-    //
-    // }
+  // return await super.update(data, this.options)
+  // if (!Object.is(data['featured_image'], undefined)) {
+  //   console.log(JSON.stringify(data))
+  //
+  // }
   // }
   // async save(data) {
-    // let res = await this.add{{
-    // }}
+  // let res = await this.add{{
+  // }}
   // }
 }

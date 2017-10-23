@@ -59,6 +59,34 @@ module.exports = class extends Base {
     return ids;
   }
 
+  async getObjectsInTermsByPage (term_ids, page = 1, pagesize = 10, taxonomies = 'category') {
+    // SELECT p.id, p.title, p.content FROM picker_S11SeYT2W_posts as p, picker_S11SeYT2W_term_relationships as pr, picker_S11SeYT2W_term_taxonomy as pt WHERE p.id=object_id and pr.term_taxonomy_id = pt.term_id and p.status = 'publish' and pt.term_id IN(1,3,4) and taxonomy = 'category' order by object_id desc;
+    const _posts = this.model('posts', {appId: this.appId})
+    // let objects = await _posts.join([
+    //   'LEFT JOIN term_relationships AS tt ON posts.id=tt.object_id',
+    //   'LEFT JOIN term_taxonomy as tr on tt.term_taxonomy_id = tr.term_id'
+    // ]).field(['id', 'title', 'content', 'author', 'status']).where(`tr.term_id IN('${term_ids}') and tr.taxonomy = 'category' and status = 'publish'`).order('id DESC').select()
+    let objects = await _posts.join({
+      term_relationships: {
+        as: 'tr',
+        on: ['id', 'tr.object_id']
+      }
+      // table: 'term_relationships',
+      // join: 'left',
+      // as: 'tr',
+    }, {
+      term_taxonomy: {
+        as: 'tt',
+        on: ['tt.term_taxonomy_id', 'tt.term_id']
+      }
+      // table: 'term_taxonomy',
+      // join: 'left',
+      // as: 'tt',
+    }).field(['id', 'title', 'content', 'author', 'status']).where(`tr.term_id IN ('${term_ids}') AND tt.taxonomy IN ('${taxonomies}') AND status='publish'`).order('id DESC').page(page, pagesize).countSelect()
+    return objects
+    // objects = await _posts
+  }
+
   /**
    * 根据分类方法分页查询内容
    * @param term_ids
@@ -67,7 +95,7 @@ module.exports = class extends Base {
    * @param limit
    * @returns {Promise.<*>}
    */
-  async getObjectsInTermsByPage (term_ids, page = 1, pagesize = 10, taxonomies = 'category') {
+  async getObjectIdsInTermsByPage (term_ids, page = 1, pagesize = 10, taxonomies = 'category') {
     // console.log('llll分类法查找 ')
     const _term_relationships = this.model("term_relationships", {appId: this.appId})
     let objects
