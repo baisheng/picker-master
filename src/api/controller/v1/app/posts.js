@@ -107,8 +107,37 @@ module.exports = class extends BaseRest {
 
   async getObjectsInTerms (termIds, page) {
     const _post = this.model('posts', {appId: this.appId})
-    const data = await _post.getList()
-    return data
+    const data = await _post.getList(termIds, page)
+    if (!think.isEmpty(data)) {
+      const metaModel = this.model('postmeta', {appId: this.appId})
+      _formatMeta(data.data)
+
+      for (const item of data.data) {
+        item.url = ''
+        const userModel = this.model('users');
+        // 如果有作者信息
+        if (!Object.is(item.meta._author_id, undefined)) {
+          const authorInfo = await userModel.where({id: item.meta._author_id}).find()
+          item.authorInfo = authorInfo
+          // 查询 出对应的作者信息
+        } else {
+          item.authorInfo = await userModel.where({id: item.author}).find()
+        }
+        _formatOneMeta(item.authorInfo)
+        if (item.authorInfo.hasOwnProperty('meta')) {
+          if (item.authorInfo.meta.hasOwnProperty('avatar')) {
+            item.authorInfo.avatar = await this.model('postmeta').getAttachment('file', item.authorInfo.meta.avatar)
+          }
+        }
+        // 如果有封面 默认是 thumbnail 缩略图，如果是 podcast 就是封面特色图片 featured_image
+        if (!Object.is(item.meta._thumbnail_id, undefined)) {
+          item.featured_image = await metaModel.getAttachment('file', item.meta._thumbnail_id)
+        }
+      }
+      return data
+    }
+  // }
+    // return data
     // return this.success(data)
     // console.log(JSON.stringify(data))
     // const query = {
@@ -132,30 +161,30 @@ module.exports = class extends BaseRest {
     //   for (const item of podcasts) {
     //     item.url = ''
     //     const userModel = this.model('users');
-    //     // 如果有作者信息
-    //     if (!Object.is(item.meta._author_id, undefined)) {
-    //       const authorInfo = await userModel.where({id: item.meta._author_id}).find()
-    //       item.authorInfo = authorInfo
-    //       // 查询 出对应的作者信息
-    //     } else {
-    //       item.authorInfo = await userModel.where({id: item.author}).find()
-    //     }
-    //     _formatOneMeta(item.authorInfo)
-    //     if (item.authorInfo.hasOwnProperty('meta')) {
-    //       if (item.authorInfo.meta.hasOwnProperty('avatar')) {
-    //         item.authorInfo.avatar = await this.model('postmeta').getAttachment('file', item.authorInfo.meta.avatar)
-    //       }
-    //     }
-    //     // 如果有封面 默认是 thumbnail 缩略图，如果是 podcast 就是封面特色图片 featured_image
-    //     if (!Object.is(item.meta._thumbnail_id, undefined)) {
-    //       item.featured_image = await metaModel.getAttachment('file', item.meta._thumbnail_id)
-    //     }
-    //   }
-    //   // return {
-    //   // "count":21,"totalPages":3,"pagesize":10,"currentPage":1,
-    //   // }
-    //   Reflect.deleteProperty(objects, 'ids')
-    //   return think.extend({}, objects, {data: podcasts})
+    //     如果有作者信息
+        // if (!Object.is(item.meta._author_id, undefined)) {
+        //   const authorInfo = await userModel.where({id: item.meta._author_id}).find()
+        //   item.authorInfo = authorInfo
+        //   查询 出对应的作者信息
+        // } else {
+        //   item.authorInfo = await userModel.where({id: item.author}).find()
+        // }
+        // _formatOneMeta(item.authorInfo)
+        // if (item.authorInfo.hasOwnProperty('meta')) {
+        //   if (item.authorInfo.meta.hasOwnProperty('avatar')) {
+        //     item.authorInfo.avatar = await this.model('postmeta').getAttachment('file', item.authorInfo.meta.avatar)
+        //   }
+        // }
+        // 如果有封面 默认是 thumbnail 缩略图，如果是 podcast 就是封面特色图片 featured_image
+        // if (!Object.is(item.meta._thumbnail_id, undefined)) {
+        //   item.featured_image = await metaModel.getAttachment('file', item.meta._thumbnail_id)
+        // }
+      // }
+      // return {
+      // "count":21,"totalPages":3,"pagesize":10,"currentPage":1,
+      // }
+      // Reflect.deleteProperty(objects, 'ids')
+      // return think.extend({}, objects, {data: podcasts})
     //   // return Object.assign({}, podcasts, objects)
     // }
     // Reflect.deleteProperty(objects, 'ids')

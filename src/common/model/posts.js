@@ -55,7 +55,7 @@ module.exports = class extends Base {
     return _id
   }
 
-  async getList (page = 1, pagesize = 10) {
+  async getList (termIds, page = 1, pagesize = 10) {
     // SELECT p.id, p.title, p.content FROM picker_S11SeYT2W_posts as p LEFT JOIN picker_S11SeYT2W_term_relationships AS tt ON p.id=tt.object_id
     // LEFT JOIN picker_S11SeYT2W_term_taxonomy as tr on tt.term_taxonomy_id = tr.term_id where tr.term_id IN(1, 3, 4) and tr.taxonomy = 'category' and p.status = 'publish' order by id desc;
     // SELECT * FROM think_user AS a LEFT JOIN `think_cate` AS c ON a.`id`=c.`id` LEFT JOIN `think_group_tag` AS d ON a.`id`=d.`group_id`
@@ -70,7 +70,7 @@ module.exports = class extends Base {
         as: 'tr',
         on: ['tr.term_id', 'tt.term_taxonomy_id']
       }
-    }).field('p.id, p.author, p.title, p.status, p.content, p.modified, p.parent').where(`tr.term_id IN(1, 3, 4) AND tr.taxonomy = 'category' AND p.status = 'publish'`).order('p.id DESC').page(page, pagesize).countSelect()
+    }).field('p.id, p.author, p.title, p.status, p.content, p.modified, p.parent').where(`tr.term_id IN(${termIds}) AND tr.taxonomy = 'category' AND p.status = 'publish'`).order('p.id DESC').page(page, pagesize).countSelect()
   }
 
   // async update (data) {
