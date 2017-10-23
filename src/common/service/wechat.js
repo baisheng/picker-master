@@ -131,12 +131,21 @@ module.exports = class extends think.Service {
       grant_type: 'authorization_code'
     };
     const url = `https://api.weixin.qq.com/sns/jscode2session?${querystring.stringify(info)}`
-    const data = await this.request(url, {
-      headers: {
-        accept: 'application/json'
-      }
-    });
-    return this.processSessionKey(data);
+    try {
+      const data = await this.request(url, {
+        headers: {
+          accept: 'application/json'
+        }
+      })
+      return this.processSessionKey(data);
+    }catch (err) {
+      throw err
+    }
+    // if (!data) {
+    //   let error = new Error('SessionKey Error')
+    //   error.name = 'SessionKeyError'
+    //   throw error
+    // }
   }
 
   async getUserInfo (encrypted_data, iv, code) {

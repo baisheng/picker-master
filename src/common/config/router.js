@@ -6,7 +6,8 @@ module.exports = [
   [/\/v1\/org\/(\d+)(?:\/(subdomain_validation|signin|signout))?/, '/api/v1/org/public?orgId=:1&action=:2', 'rest'],
   [/\/v1\/org\/(\w+)\/(\w+)(?:\/(\d+))?/, '/api/v1/org/:2?appId=:1&id=:3', 'rest'],
   [/\/v1\/app\/create?/, '/api/v1/app/public?action=create', 'rest'],
-  [/\/v1\/app\/(\w+)\/(wxlogin|signin|signou)\/?/, '/api/v1/app/public?appId=:1&action=:2', 'rest'],
+  [/\/v1\/app\/(\w+)\/auth\/(\w+)\/?/, '/api/v1/app/auth?appId=:1&action=:2', 'rest'],
+  [/\/v1\/app\/(\w+)\/(wxlogin|signin|signout)\/?/, '/api/v1/app/public?appId=:1&action=:2', 'rest'],
   // 分类方法 api
   [/\/v1\/app\/(\w+)\/taxonomy(?:\/(\w+))?/, '/api/v1/app/taxonomy?appId=:1&type=:2', 'rest'],
   // [/\/v1\/app\/(\w+)\/posts(?:\/(\w+))?/, '/api/v1/app/posts?appId=:1&format=:2', 'rest'],

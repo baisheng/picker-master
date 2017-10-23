@@ -5,7 +5,28 @@ const jwt = require('jsonwebtoken')
 
 module.exports = class extends BaseRest {
   async getAction () {
-    return this.success('Auth login ...')
+    const action = this.get('action')
+    switch (action) {
+      // 获取会话
+      // return
+      case 'token': {
+        const code = this.get('code')
+        if (!think.isEmpty(code)) {
+          try {
+            const token = await this.wxLogin(code);
+            return this.success({token: token})
+          } catch (e) {
+            return this.fail(e)
+          }
+        } else {
+          return this.fail()
+        }
+      }
+      default: {
+        break;
+      }
+    }
+    // return this.success('Auth login ...')
     // const options = await this.model('options', {appId: this.appId}).get()
     // const wxConfig = options.wechat
     // if (!think.isEmpty(wxConfig)) {
@@ -16,12 +37,32 @@ module.exports = class extends BaseRest {
   }
 
   async postAction () {
-    const xWechatCode = this.header('x-wechat-code')
-    if (!think.isEmpty(xWechatCode)) {
-      const encrypted = this.header('x-wechat-encrypted')
-      const iv = this.header('x-wechat-iv')
-      await this.wxLogin(xWechatCode, encrypted, iv)
+    const data = this.post()
+    console.log(JSON.stringify(data))
+    if (!Object.is(data.action, undefined)) {
+      if (data.action === 'verify_token') {
+        jwt.verify(data.token, 'S1BNbRp2b', (err, decoded) => {
+          if (err) {
+            console.log(err)
+            return this.fail({"errno": 1000, data: err})
+            /*
+              err = {
+                name: 'TokenExpiredError',
+                message: 'jwt expired',
+                expiredAt: 1408621000
+              }
+            */
+          }
+          return this.success({verify: 'success'})
+        })
+      }
     }
+    // const xWechatCode = this.header('x-wechat-code')
+    // if (!think.isEmpty(xWechatCode)) {
+    //   const encrypted = this.header('x-wechat-encrypted')
+    //   const iv = this.header('x-wechat-iv')
+    //   await this.wxLogin(xWechatCode, encrypted, iv)
+    // }
     // return this.json(this.ctx.headers)
     // console.log(JSON.stringify(this.ctx.headers))
     // const wxcode = this.header
@@ -104,15 +145,19 @@ module.exports = class extends BaseRest {
     return this.success();
   }
 
-  /**
-   * x-wechat-code : 微信登录的 code
-   * x-wechat-encrypted : 微信登录后已加密的用户信息
-   * x-wechat-iv: 解密向量
-   *
-   * @returns {Promise.<void>}
-   */
-  async wxLogin (code, encrypted, iv) {
-    const data = this.post()
+  async wxSession (code) {
+    const options = await this.model('options', {appId: this.appId}).get()
+    const wxConfig = options.wechat
+    if (!think.isEmpty(wxConfig)) {
+      const wxService = think.service('wechat', 'common', wxConfig.appid, wxConfig.appsecret)
+      const session = await wxService.getKey(code)
+      return session
+      // return this.success(userInfo)
+    }
+  }
+
+  async wxLogin (code) {
+
     const options = await this.model('options', {appId: this.appId}).get()
     const wxConfig = options.wechat
     if (!think.isEmpty(wxConfig)) {
@@ -131,8 +176,20 @@ module.exports = class extends BaseRest {
             "appid": "wxca1f2b8b273d909e"
         }
       */
-      const wxUserInfo = await wxService.getUserInfo(encrypted, iv, code)
-      // return this.success(userInfo)
+      try {
+        const data = await wxService.getKey(code)
+        const openId = data.data.openid
+        // 验证用户或保存为新用户
+        const token = jwt.sign({user_login: openId}, 'S1BNbRp2b', {expiresIn: '3d'})
+        console.log(token)
+        const userModel = this.model('users')
+        // const token = jwt.sign(wxUserInfo, 'S1BNbRp2b')
+        await userModel.saveWechatUser({openId: openId, appId: this.appId})
+        return token
+      } catch (e) {
+        console.log(e)
+        throw e
+      }
     }
   }
 

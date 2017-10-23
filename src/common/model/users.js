@@ -71,7 +71,7 @@ module.exports = class extends Base {
       user_login: data.openId
     }).thenAdd({
       user_login: data.openId,
-      user_nicename: data.nickName,
+      // user_nicename: data.nickName,
       user_registered: createTime,
       user_status: 1
     });
