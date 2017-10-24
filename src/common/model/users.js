@@ -59,6 +59,35 @@ module.exports = class extends Base {
     return user
   }
 
+/*
+{ openId: 'oQgDx0IVqAg0b3GibFYBdtg3BKMA',
+  nickName: '请好好说话🌱',
+  gender: 1,
+  language: 'en',
+  city: 'Chaoyang',
+  province: 'Beijing',
+  country: 'China',
+  avatarUrl: 'https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83ep0GdQEHK3tYdvq3DTMVhsdiaviaLg6b7CdDBLOYSWDGYOEtS7FFmvhd6CGCuQVfe4Rb0uQUlaq7XoA/0',
+  watermark: { timestamp: 1508809460, appid: 'wxca1f2b8b273d909e' },
+  appId: 'S11SeYT2W' }
+*/
+async updateWechatUser (data) {
+    // const createTime = new Date().getTime();
+    try {
+      // 用户信息
+      await this.thenUpdate({user_nicename: data.nickName}, {user_login: data.openId})
+      // Meta 数据
+      const usermeta = this.model('usermeta')
+      await usermeta.thenUpdate({
+        meta_value: JSON.stringify(data)
+      }, {
+        meta_key: `picker_${data.appId}_wechat`
+      })
+    } catch(e) {
+      console.log(e)
+      throw e
+    }
+  }
   /**
    * 添加从微信过来的用户
    *

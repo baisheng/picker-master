@@ -181,6 +181,14 @@ module.exports = class extends BaseRest {
           await think.cache(openid, sessionkey)
         })
       let wxUserInfo = await wxService.getUserInfo(data.encryptedData, data.iv, user_login)
+      // 更新用户信息
+      const userModel = this.model('users')
+      // const token = jwt.sign(wxUserInfo, 'S1BNbRp2b')
+      // console.log(JSON.stringify(wxUserInfo))
+      // console.log('-----------')
+      wxUserInfo = think.extend({}, wxUserInfo, {appId: this.appId})
+      await userModel.updateWechatUser(wxUserInfo)
+
       return this.success(wxUserInfo)
     }
   }
@@ -255,7 +263,7 @@ module.exports = class extends BaseRest {
         const openId = data.data.openid
         // 验证用户或保存为新用户
         const token = jwt.sign({user_login: openId}, 'S1BNbRp2b', {expiresIn: '3d'})
-        console.log(token)
+        // console.log(token)
         const userModel = this.model('users')
         // const token = jwt.sign(wxUserInfo, 'S1BNbRp2b')
         await userModel.saveWechatUser({openId: openId, appId: this.appId})
