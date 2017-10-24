@@ -107,7 +107,7 @@ module.exports = class extends BaseRest {
 
   async getObjectsInTerms (termIds, page) {
     const _post = this.model('posts', {appId: this.appId})
-    const data = await _post.getList(termIds, page)
+    const data = await _post.getList(termIds, page, this.get('status'))
     if (!think.isEmpty(data)) {
       const metaModel = this.model('postmeta', {appId: this.appId})
       _formatMeta(data.data)
