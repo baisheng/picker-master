@@ -195,6 +195,8 @@ module.exports = class extends BaseRest {
 
   async checkUserInfo () {
     const data = this.post()
+    console.log('chek info .....')
+    console.log(data)
     // { action: 'check_user_info',
     //   rawData: '{"nickName":"请好好说话🌱","gender":1,"language":"en","city":"Chaoyang","province":"Beijing","cy":"China","avatarUrl":"https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83ep0GdQEHK3tYdvq3DTMVhsdiaviaLg6b7CdDBLOYSWDGYOEtS7FFmvhd6CGCuQVfe4Rb0uQUlaq7XoA/0"}',
     //   signature: 'e9dfe22dfb4fbbad0ec359cb498915b84860295d' }
@@ -205,7 +207,7 @@ module.exports = class extends BaseRest {
       console.log(user_login)
       sha1.update(rawData.toString())
       const wxUser = await think.cache(user_login)
-      console.log(wxUser.session_key)
+      console.warn('SESSION KEY ......'+ wxUser.session_key)
       sha1.update(wxUser.session_key)
       const signature2 = sha1.digest('hex')
       if (signature1 === signature2) {
@@ -214,6 +216,7 @@ module.exports = class extends BaseRest {
         throw new Error('Signature Error')
       }
     } catch (e) {
+      console.error(e)
       throw new Error('Signature Error')
     }
   }
