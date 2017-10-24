@@ -1,6 +1,6 @@
 /* eslint-disable no-undef,no-return-await */
-const Redis = require('ioredis')
-const redis = new Redis()
+// const Redis = require('ioredis')
+// const redis = new Redis()
 const jwt = require('jsonwebtoken')
 module.exports = class extends think.Controller {
 
@@ -89,7 +89,13 @@ module.exports = class extends think.Controller {
       return this.fail('发送失败，请重试！')
     }
     // 添加至 REDIS 服务
-    await redis.set(identity, code, 'EX', 360);
+    await think.cache(identity, code, 'EX', 360);
+    await this.cache(identity, code, {
+      type: 'redis',
+      redis: {
+        timeout: 360
+      }
+    });
     return this.success()
   }
 

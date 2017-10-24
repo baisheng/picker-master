@@ -145,14 +145,14 @@ global._formatOrgs = (orgs) => {
 }
 
 global.verifyMsgCode = async (identity, code, destory = false) => {
-  const Redis = require('ioredis')
-  const redis = new Redis()
-  const _code = await redis.get(identity)
-  if (!think.isEmpty(_code) && _code === code) {
-    if (destory) {
-      await redis.del(identity)
-    }
-    return true
-  }
+  // const Redis = require('ioredis')
+  // const redis = new Redis()
+  // const _code = await redis.get(identity)
+  // if (!think.isEmpty(_code) && _code === code) {
+  //   if (destory) {
+  //     await redis.del(identity)
+  //   }
+  //   return true
+  // }
   return false
 }

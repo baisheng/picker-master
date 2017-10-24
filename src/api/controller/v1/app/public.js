@@ -1,7 +1,5 @@
 /* eslint-disable no-return-await */
 const BaseRest = require('./_rest.js');
-const Redis = require('ioredis')
-const redis = new Redis()
 const jwt = require('jsonwebtoken')
 
 module.exports = class extends BaseRest {
