@@ -131,7 +131,7 @@ module.exports = class extends BaseRest {
     const userId = this.get('id')
     const appid = this.get('appId')
     const userMeta = this.model('usermeta')
-    const type = this.get('type')
+    let type = this.get('type')
 
     // 根据 id 获取单用户
     if (!think.isEmpty(userId)) {
