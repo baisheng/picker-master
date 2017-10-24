@@ -63,7 +63,7 @@ module.exports = class extends Base {
    * @param pagesize
    * @returns {Promise<Object>}
    */
-  async getList (termIds, page = 1, status, pagesize = 10) {
+  async getList (termIds, page = 1, status, pagesize = 50) {
     let query = ''
     if (think.isEmpty(status)) {
       query = `p.status not in ('trash')`
