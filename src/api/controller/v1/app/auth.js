@@ -169,6 +169,8 @@ module.exports = class extends BaseRest {
   async decodeUserInfo () {
     const data = this.post()
     const user_login = this.ctx.state.user.user_login
+    const user_id = this.ctx.state.user.id
+    // console.log(this.ctx.state.user)
     const options = await this.model('options', {appId: this.appId}).get()
     const wxConfig = options.wechat
     if (!think.isEmpty(wxConfig)) {
@@ -183,10 +185,7 @@ module.exports = class extends BaseRest {
       let wxUserInfo = await wxService.getUserInfo(data.encryptedData, data.iv, user_login)
       // 更新用户信息
       const userModel = this.model('users')
-      // const token = jwt.sign(wxUserInfo, 'S1BNbRp2b')
-      // console.log(JSON.stringify(wxUserInfo))
-      // console.log('-----------')
-      wxUserInfo = think.extend({}, wxUserInfo, {appId: this.appId})
+      wxUserInfo = think.extend({}, wxUserInfo, {appId: this.appId}, {userId: user_id})
       await userModel.updateWechatUser(wxUserInfo)
 
       return this.success(wxUserInfo)
@@ -195,7 +194,7 @@ module.exports = class extends BaseRest {
 
   async checkUserInfo () {
     const data = this.post()
-    console.log('chek info .....')
+    console.log('----------- CHECK USER INFO -----------')
     console.log(data)
     // { action: 'check_user_info',
     //   rawData: '{"nickName":"请好好说话🌱","gender":1,"language":"en","city":"Chaoyang","province":"Beijing","cy":"China","avatarUrl":"https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83ep0GdQEHK3tYdvq3DTMVhsdiaviaLg6b7CdDBLOYSWDGYOEtS7FFmvhd6CGCuQVfe4Rb0uQUlaq7XoA/0"}',
@@ -206,9 +205,6 @@ module.exports = class extends BaseRest {
       const user_login = this.ctx.state.user.user_login
       const wxUser = await think.cache(user_login)
       sha1.update(rawData.toString() + wxUser.session_key)
-      console.log(user_login)
-      // console.warn('SESSION KEY ......' + wxUser.session_key)
-      // sha1.update(wxUser.session_key)
       const signature2 = sha1.digest('hex')
       if (signature1 === signature2) {
         return this.success()
@@ -249,6 +245,7 @@ module.exports = class extends BaseRest {
         async (openid, sessionkey) => {
           await think.cache(openid, sessionkey)
         })
+      console.log('create time -------')
       /*
         "openId": "oQgDx0IVqAg0b3GibFYBdtg3BKMA",
         "nickName": "请好好说话🌱",
@@ -267,12 +264,14 @@ module.exports = class extends BaseRest {
         const data = await wxService.getKey(code)
         const openId = data.data.openid
         // 验证用户或保存为新用户
-        const token = jwt.sign({user_login: openId}, 'S1BNbRp2b', {expiresIn: '3d'})
-        // console.log(token)
         const userModel = this.model('users')
         // const token = jwt.sign(wxUserInfo, 'S1BNbRp2b')
-        await userModel.saveWechatUser({openId: openId, appId: this.appId})
-        return token
+        const res = await userModel.saveWechatUser({openId: openId, appId: this.appId})
+        if (res) {
+          let user = think.extend({}, res, {user_login: openId})
+          const token = jwt.sign(user, 'S1BNbRp2b', {expiresIn: '3d'})
+          return token
+        }
       } catch (e) {
         console.log(e)
         throw e

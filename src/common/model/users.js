@@ -79,8 +79,11 @@ async updateWechatUser (data) {
       // Meta 数据
       const usermeta = this.model('usermeta')
       await usermeta.thenUpdate({
+        user_id: `${data.userId}`,
+        meta_key: `picker_${data.appId}_wechat`,
         meta_value: JSON.stringify(data)
       }, {
+        user_id: `${data.userId}`,
         meta_key: `picker_${data.appId}_wechat`
       })
     } catch(e) {
