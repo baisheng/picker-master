@@ -203,12 +203,12 @@ module.exports = class extends BaseRest {
     const signature1 = data.signature
     const rawData = data.rawData
     try {
-      const user_login = this.ctx.state.user.user_login
-      console.log(user_login)
-      sha1.update(rawData.toString())
       const wxUser = await think.cache(user_login)
-      console.warn('SESSION KEY ......'+ wxUser.session_key)
-      sha1.update(wxUser.session_key)
+      const user_login = this.ctx.state.user.user_login
+      sha1.update(rawData.toString() + wxUser.session_key)
+      console.log(user_login)
+      // console.warn('SESSION KEY ......' + wxUser.session_key)
+      // sha1.update(wxUser.session_key)
       const signature2 = sha1.digest('hex')
       if (signature1 === signature2) {
         return this.success()

@@ -137,7 +137,6 @@ module.exports = class extends BaseRest {
     if (!think.isEmpty(userId)) {
       const user = await this.model('users').where({id: userId}).find()
       _formatOneMeta(user)
-      console.log(JSON.stringify(user))
       if (!think.isEmpty(user.meta[`picker_${appid}_wechat`])) {
         user.avatar = user.meta[`picker_${appid}_wechat`].avatarUrl
         // user.type = 'wechat'
@@ -160,7 +159,6 @@ module.exports = class extends BaseRest {
         })
         const users = await this.model('users').where({id: ['IN', ids]}).page(this.get('page'), 50).countSelect()
         _formatMeta(users.data)
-        console.log(JSON.stringify(users))
         for (const user of users.data) {
           if (!think.isEmpty(user.meta.avatar)) {
             user.avatar = await this.model('postmeta').getAttachment('file', user.meta.avatar)
