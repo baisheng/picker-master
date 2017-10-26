@@ -140,7 +140,7 @@ global._formatApps = (list) => {
 
 global._formatOrgs = (orgs) => {
   for (const item of orgs) {
-    console.log(JSON.stringify(item) + '----')
+    // console.log(JSON.stringify(item) + '----')
   }
 }
 

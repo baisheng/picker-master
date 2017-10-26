@@ -21,7 +21,6 @@ module.exports = class extends Base {
       switch (type) {
         case 'file': {
           query = think.extend({'meta_key': '_attachment_file'}, query)
-          console.log(JSON.stringify(query))
           const attachment = await this.where(query).find()
           if (!think.isEmpty(attachment)) {
             return JSON.parse(attachment.meta_value)
