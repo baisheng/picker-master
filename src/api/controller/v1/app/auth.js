@@ -203,8 +203,8 @@ module.exports = class extends BaseRest {
     const signature1 = data.signature
     const rawData = data.rawData
     try {
-      const wxUser = await think.cache(user_login)
       const user_login = this.ctx.state.user.user_login
+      const wxUser = await think.cache(user_login)
       sha1.update(rawData.toString() + wxUser.session_key)
       console.log(user_login)
       // console.warn('SESSION KEY ......' + wxUser.session_key)
