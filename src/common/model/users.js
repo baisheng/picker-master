@@ -372,4 +372,15 @@ async updateWechatUser (data) {
     name = info.display_name;
     return name;
   }
+
+  // async getUserMeta(key)
+  async getLikedPost (appid, post_id) {
+    const userMeta = this.model('usermeta')
+    const data = await userMeta.where(`meta_value ->'$.post_id' = '${post_id}' and meta_key = 'picker_${appid}_liked_posts'`).select()
+  }
+  async likedPost (appid, post_id) {
+    const userMeta = this.model('usermeta')
+    const data = await userMeta.where(`meta_value ->'$.post_id' = '${post_id}' and meta_key = 'picker_${appid}_liked_posts'`).select()
+
+  }
 }

@@ -3,6 +3,11 @@ module.exports = [
   // [/\/v1\/org\/(\w+)/, '/api/v1/org/public?action=:1', 'rest'],
   // [/\/v1\/org(?:\/(\d+))?/, '/api/v1/org/public?orgId=:1', 'rest'],
   // 机构管理 api
+  // 2 appid + 2 api + 3 postid + 4 action + status
+  [/\/v1\/app\/(\w+)\/me\/likes?/, '/api/v1/app/me/likes?appId=:1', 'get'],
+  [/\/v1\/app\/(\w+)\/posts\/(\d+)\/(\w+)\/new?/, '/api/v1/app/posts/:3/new?appId=:1&id=:2', 'post'],
+  [/\/v1\/app\/(\w+)\/posts\/(\d+)\/likes?/, '/api/v1/app/posts/likes?appId=:1&id=:2', 'get'],
+  [/\/v1\/app\/(\w+)\/posts\/(\d+)\/(\w+)\/(\w+)?/, '/api/v1/app/posts/:4?appId=:1&id=:3&action=:5', 'rest'],
   [/\/v1\/org\/(\d+)(?:\/(subdomain_validation|signin|signout))?/, '/api/v1/org/public?orgId=:1&action=:2', 'rest'],
   [/\/v1\/org\/(\w+)\/(\w+)(?:\/(\d+))?/, '/api/v1/org/:2?appId=:1&id=:3', 'rest'],
   [/\/v1\/app\/create?/, '/api/v1/app/public?action=create', 'rest'],

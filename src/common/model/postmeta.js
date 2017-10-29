@@ -44,7 +44,17 @@ module.exports = class extends Base {
     }
   }
 
-
+  // async addMeta (user_id, post_id) {
+  //   await this.add({
+  //     post_id: id,
+  //     meta_key: '_liked',
+  //     meta_value: ['exp', `JSON_ARRAY(JSON_OBJECT('id', ${userId}))`]
+  //   })
+  // }
+  async getMeta (post_id, key) {
+    const data = await this.where({post_id: post_id, meta_key: key}).find()
+    return data
+  }
   // async getThumbnail(post_id) {
   //   let query = {}
   //   query.post_id = post_id
@@ -52,4 +62,35 @@ module.exports = class extends Base {
   //   let thumbnail = await this.where(query).find()
   //   return JSON.parse(attachment['meta_value'])
   // }
+
+  /**
+   * 统计内容喜欢的人数
+   *
+   * @param post_id
+   * @returns {Promise.<number|*>}
+   */
+  async getLikedCount (post_id) {
+    const total = await this.field('JSON_LENGTH(meta_value) as like_count').where({
+      post_id: post_id,
+      meta_key: '_liked'
+    }).find()
+    return total.like_count
+  }
+
+  /**
+   * 添加新喜欢的人员
+   * @param user_id
+   * @param post_id
+   * @returns {Promise.<void>}
+   */
+  async newLike (user_id, post_id) {
+    await this.where({
+      post_id: post_id,
+      meta_key: '_liked'
+    }).update({
+      'post_id': post_id,
+      'meta_key': '_liked',
+      'meta_value': ['exp', `JSON_ARRAY_APPEND(meta_value, '$', JSON_OBJECT('id', ${user_id}))`]
+    })
+  }
 }
