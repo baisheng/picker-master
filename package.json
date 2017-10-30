@@ -22,6 +22,7 @@
     "querystring": "^0.2.0",
     "semver": "^5.4.1",
     "shortid": "^2.2.8",
+    "text-censor": "^1.0.2",
     "think-cache": "^1.0.0",
     "think-cache-file": "^1.0.8",
     "think-cache-redis": "^1.1.2",

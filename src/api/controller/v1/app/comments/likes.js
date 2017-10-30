@@ -47,7 +47,7 @@ module.exports = class extends BaseRest {
    * @returns {Promise.<*>}
    */
   async newAction () {
-    const userId = this.ctx.state.user.id
+    const userId = this.ctx.state.user.userInfo.id
     const id = this.get('id')
     const postMeta = this.model('postmeta', {appId: this.appId})
     const result = await postMeta.where({
@@ -106,7 +106,7 @@ module.exports = class extends BaseRest {
    */
   async mineAction () {
     const postMeta = this.model('postmeta', {appId: this.appId})
-    const userId = this.ctx.state.user.id
+    const userId = this.ctx.state.user.userInfo.id
 
     // 返回用户是否 like 此 post
     if (this.isGet) {

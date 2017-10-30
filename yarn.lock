@@ -2767,6 +2767,10 @@ tar@^2.2.1:
     fstream "^1.0.2"
     inherits "2"
 
+text-censor@^1.0.2:
+  version "1.0.2"
+  resolved "http://registry.npm.taobao.org/text-censor/download/text-censor-1.0.2.tgz#67a7ed9ae9174959613aa1f2b9f69b66b908a249"
+
 text-table@~0.2.0:
   version "0.2.0"
   resolved "http://registry.npm.taobao.org/text-table/download/text-table-0.2.0.tgz#7f5ee823ae805207c00af2df4a84ec3fcfa570b4"

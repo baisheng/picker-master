@@ -75,11 +75,7 @@ module.exports = class extends Base {
       post_id: post_id,
       meta_key: '_liked'
     }).find()
-    if (!think.isEmpty(total)) {
-      return total.like_count
-    } else {
-      return 0
-    }
+    return total.like_count
   }
 
   /**
@@ -106,7 +102,7 @@ module.exports = class extends Base {
    * @returns {Promise<number>}
    */
   async unLike (user_id, post_id) {
-    const res = await this.where(`post_id = '${post_id}' AND meta_key = '_liked' AND JSON_SEARCH(meta_value, 'one', ${user_id}) IS NOT NULL`).update({
+     const res = await this.where(`post_id = '${post_id}' AND meta_key = '_liked' AND JSON_SEARCH(meta_value, 'one', ${user_id}) IS NOT NULL`).update({
         'meta_value': ['exp', `JSON_REMOVE(meta_value, SUBSTRING_INDEX(REPLACE(JSON_SEARCH(meta_value, 'one', '${user_id}', NULL, '$**.id'), '"', ''), '.', 1))`]
       }
     )
@@ -117,25 +113,10 @@ module.exports = class extends Base {
    * 获取用户是否 like a post
    * @param user_id
    * @param post_id
-   * @returns {Promise.<{like_count: number, contain: number}>}
+   * @returns {Promise<any>}
    */
   async getLikeStatus (user_id, post_id) {
     const data = await this.field(`JSON_LENGTH(meta_value) AS like_count, JSON_CONTAINS(meta_value, '[{"id": "${user_id}"}]') AS contain`).where(`meta_key = '_liked' and post_id = ${post_id}`).find()
-    if (!think.isEmpty(data)) {
-      if (!Object.is(data.contain, undefined)) {
-        // console.log('-------------------')
-        // console.log(JSON.stringify(data))
-        // return true
-        return data
-      }
-    }
-    return {'like_count': 0, 'contain': 0}
-    // console.log('-----------xxxxx')
-    // if (!think.isEmpty(data)) {
-    //   console.log(JSON.stringify(data))
-    // } else {
-    //   console.log('xxxxxxxxxxxx')
-    // }
-    // return !think.isEmpty(data);
+    return data
   }
 }

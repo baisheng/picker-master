@@ -94,18 +94,18 @@ module.exports = class extends BaseRest {
       return await this.getPodcastList(query, fields)
     }
 
-    // if (!think.isEmpty(format)) {
     const data = await this.getAllFromPage()
-    // return this.success('格式化ovnr')
     return this.success(data)
-    // }
-
-    // return this.success('默认数据 ')
-
-
   }
 
+  /**
+   * 按分类查找
+   * @param termIds
+   * @param page
+   * @returns {Promise.<Object>}
+   */
   async getObjectsInTerms (termIds, page) {
+    const userId = this.ctx.state.user.id
     const _post = this.model('posts', {appId: this.appId})
     const data = await _post.getList(termIds, page, this.get('status'))
     if (!think.isEmpty(data)) {
@@ -126,9 +126,19 @@ module.exports = class extends BaseRest {
         _formatOneMeta(item.authorInfo)
         if (item.authorInfo.hasOwnProperty('meta')) {
           if (item.authorInfo.meta.hasOwnProperty('avatar')) {
-            item.authorInfo.avatar = await this.model('postmeta').getAttachment('file', item.authorInfo.meta.avatar)
+            item.authorInfo.avatar = await metaModel.getAttachment('file', item.authorInfo.meta.avatar)
           }
         }
+        // TODO: @basil 1030这部分数据需要处理，减少 SQL 查询
+        // "likes_enabled": true,
+        //   "sharing_enabled": true,
+        // 获取收藏/喜欢 的数量
+        item.like_count = await metaModel.getLikedCount(item.id)
+        // 获取当前用户是否喜欢
+        const iLike = await metaModel.getLikeStatus(userId, item.id)
+        item.i_like = iLike.contain > 0
+        item.likes_enabled = true
+        item.sharing_enabled = true
         // 如果有封面 默认是 thumbnail 缩略图，如果是 podcast 就是封面特色图片 featured_image
         if (!Object.is(item.meta._thumbnail_id, undefined)) {
           item.featured_image = await metaModel.getAttachment('file', item.meta._thumbnail_id)

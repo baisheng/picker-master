@@ -4,20 +4,6 @@ const Base = require('./base');
  * model
  */
 module.exports = class extends Base {
-  // constructor(...args) {
-  //   super(...args);
-  //   this.relation = {
-  //     metas: {
-  //       type: think.model.HAS_MANY,
-  //       model: 'postmeta',
-  //       fKey: 'post_id',
-  //       field: "post_id,meta_key,meta_value",
-  //     }
-  //     // comment: think.Model.HAS_MANY,
-  //     // cate: think.Model.MANY_TO_MANY
-  //   };
-  // }
-
   get relation () {
     return {
       // children: {
@@ -25,14 +11,14 @@ module.exports = class extends Base {
       //   model: 'posts',
       //   fKey: 'parent'
       // },
-      metas: {
-        type: think.Model.HAS_MANY,
-        model: 'postmeta',
-        fKey: 'post_id',
-        field: "post_id,meta_key,meta_value"
+      // metas: {
+      //   type: think.Model.HAS_MANY,
+      //   model: 'postmeta',
+      //   fKey: 'post_id',
+      //   field: "post_id,meta_key,meta_value"
         // rModel: 'usermeta',
         // fKey: 'users_id'
-      }
+      // }
     };
   }
 
@@ -74,7 +60,7 @@ module.exports = class extends Base {
     // SELECT p.id, p.title, p.content FROM picker_S11SeYT2W_posts as p LEFT JOIN picker_S11SeYT2W_term_relationships AS tt ON p.id=tt.object_id
     // LEFT JOIN picker_S11SeYT2W_term_taxonomy as tr on tt.term_taxonomy_id = tr.term_id where tr.term_id IN(1, 3, 4) and tr.taxonomy = 'category' and p.status = 'publish' order by id desc;
     // SELECT * FROM think_user AS a LEFT JOIN `think_cate` AS c ON a.`id`=c.`id` LEFT JOIN `think_group_tag` AS d ON a.`id`=d.`group_id`
-    const data = await this.alias('p').join({
+    return this.alias('p').join({
       term_relationships: {
         join: 'left', // 有 left,right,inner 3 个值
         as: 'tt',
@@ -86,9 +72,6 @@ module.exports = class extends Base {
         on: ['tr.term_id', 'tt.term_taxonomy_id']
       }
     }).field('p.id, p.author, p.title, p.status, p.content, p.modified, p.parent').where(`tr.term_id IN(${termIds}) AND tr.taxonomy = 'category' AND ${query}`).order('p.id DESC').page(page, pagesize).countSelect()
-
-
-    return data
   }
 
   // async update (data) {
