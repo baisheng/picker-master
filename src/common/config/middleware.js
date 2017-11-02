@@ -27,7 +27,26 @@ module.exports = [
     handle: 'trace',
     enable: !think.isCli,
     options: {
-      debug: isDev
+      contentType(ctx) {
+        // All request url starts of /api or request header contains `X-Requested-With: XMLHttpRequest` will output json error
+        const APIRequest = /^\/v*/.test(ctx.request.path);
+        console.log(ctx.request.path)
+        const AJAXRequest = ctx.is('X-Requested-With', 'XMLHttpRequest');
+        return APIRequest || AJAXRequest ? 'json' : 'html';
+      },
+      // basic set as string, then put 404.html, 500.html into error folder
+      // templates: path.join(__dirname, 'error'),
+      // customed set as object
+      templates: {
+        404: path.join(__dirname, 'error/404.html'),
+        500: path.join(__dirname, 'error/500.html'),
+        502: path.join(__dirname, 'error/502.html')
+      },
+      sourceMap: false,
+      debug: isDev,
+      error(err, ctx) {
+        return console.error(err)
+      }
     }
   },
   {
@@ -47,6 +66,11 @@ module.exports = [
       return (ctx, next) => {
         // Custom 401 handling if you don't want to expose koa-jwt errors to users
         return next().catch((err) => {
+          // if (err.status === 404) {
+          //   ctx.status = 404
+          //   ctx.body = '404'
+          //   throw err;
+          // }
           // eslint-disable-next-line yoda
           if (401 === err.status) {
             ctx.status = 401;

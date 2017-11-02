@@ -199,7 +199,7 @@ module.exports = class extends BaseRest {
     const userInfo = await userModel.where({user_login: userLogin}).find();
     // 验证用户是否存在
     if (think.isEmpty(userInfo)) {
-      return this.fail('ACCOUNT_ERROR');
+      return this.fail(404, 'ACCOUNT_NOT_FOUND');
     }
     // 验证机构中是否存在此用户并处理用户角色权限
     _formatOneMeta(userInfo)
@@ -219,7 +219,7 @@ module.exports = class extends BaseRest {
     // 校验密码
     const password = data.user_pass;
     if (!userModel.checkPassword(userInfo, password)) {
-      return this.fail('ACCOUNT_ERROR');
+      return this.fail(400, 'ACCOUNT_PASSWORD_ERROR');
     }
     // return this.success(userInfo)
     // 获取签名盐

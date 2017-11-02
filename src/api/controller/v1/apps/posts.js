@@ -1,5 +1,5 @@
 /* eslint-disable no-undef,no-return-await,default-case,max-depth,no-warning-comments */
-const BaseRest = require('./_rest')
+const BaseRest = require('./Base')
 let fields = [
   'id',
   'author',
@@ -15,7 +15,31 @@ let fields = [
   'parent'
 ]
 module.exports = class extends BaseRest {
+  async indexAction () {
+    const parent = this.get('parent')
+    let query = {}
+    if (!think.isEmpty(parent)) {
+      query.parent = parent
+      query.status = ['NOT IN', 'trash']
+      const status = this.get('status')
 
+      if (!think.isEmpty(status)) {
+        if (status === 'my') {
+          // query.status = ['NOT IN', 'trash']
+          query.author = this.ctx.state.user.id
+        }
+        if (status === 'drafts') {
+          query.status = ['like', '%draft%']
+        } else {
+          query.status = status
+        }
+      }
+      return await this.getPodcastList(query, fields)
+    }
+
+    const data = await this.getAllFromPage()
+    return this.success(data)
+  }
   async getAction () {
     const format = this.get('format')
     const termId = this.get('term_id')
@@ -94,18 +118,18 @@ module.exports = class extends BaseRest {
       return await this.getPodcastList(query, fields)
     }
 
-    // if (!think.isEmpty(format)) {
     const data = await this.getAllFromPage()
-    // return this.success('格式化ovnr')
     return this.success(data)
-    // }
-
-    // return this.success('默认数据 ')
-
-
   }
 
+  /**
+   * 按分类查找
+   * @param termIds
+   * @param page
+   * @returns {Promise.<Object>}
+   */
   async getObjectsInTerms (termIds, page) {
+    const userId = this.ctx.state.user.id
     const _post = this.model('posts', {appId: this.appId})
     const data = await _post.getList(termIds, page, this.get('status'))
     if (!think.isEmpty(data)) {
@@ -126,9 +150,19 @@ module.exports = class extends BaseRest {
         _formatOneMeta(item.authorInfo)
         if (item.authorInfo.hasOwnProperty('meta')) {
           if (item.authorInfo.meta.hasOwnProperty('avatar')) {
-            item.authorInfo.avatar = await this.model('postmeta').getAttachment('file', item.authorInfo.meta.avatar)
+            item.authorInfo.avatar = await metaModel.getAttachment('file', item.authorInfo.meta.avatar)
           }
         }
+        // TODO: @basil 1030这部分数据需要处理，减少 SQL 查询
+        // "likes_enabled": true,
+        //   "sharing_enabled": true,
+        // 获取收藏/喜欢 的数量
+        item.like_count = await metaModel.getLikedCount(item.id)
+        // 获取当前用户是否喜欢
+        const iLike = await metaModel.getLikeStatus(userId, item.id)
+        item.i_like = iLike.contain > 0
+        item.likes_enabled = true
+        item.sharing_enabled = true
         // 如果有封面 默认是 thumbnail 缩略图，如果是 podcast 就是封面特色图片 featured_image
         if (!Object.is(item.meta._thumbnail_id, undefined)) {
           item.featured_image = await metaModel.getAttachment('file', item.meta._thumbnail_id)
@@ -229,7 +263,7 @@ module.exports = class extends BaseRest {
     const author = this.get('author')
     // date query
     query.status = ['NOT IN', 'trash']
-    const list = await this.modelInstance.where(query).field(fields.join(",")).order('sort ASC').page(this.get('page'), 12).countSelect()
+    const list = await this.model('posts', {appId: this.appId}).where(query).field(fields.join(",")).order('sort ASC').page(this.get('page'), 12).countSelect()
     _formatMeta(list.data)
     const metaModel = this.model('postmeta', {appId: this.appId})
     for (const item of list.data) {
@@ -505,7 +539,24 @@ module.exports = class extends BaseRest {
     return list
   }
 
-  async postAction () {
+  // async newAction () {
+  //   const data = this.post()
+    // data.categories = ['1', '2', '3']
+    // console.log(JSON.parse(data.categories))
+    // let cate = ["10"]
+    // cate = cate.concat(JSON.parse(data.categories))
+    // console.log(JSON.stringify(cate))
+    // let cate = []
+    // const cate= JSON.parse(data.categories)
+    // for (let i of cate) {
+    //   console.log('--' + i)
+    // }
+    // console.log(typeof cate)
+    // categories.push(JSON.parse(data.categories))
+    // console.log(categories)
+    // return this.success(data)
+  // }
+  async newAction () {
     const data = this.post()
     if (think.isEmpty(data.type)) {
       data.type = 'podcast'
@@ -527,12 +578,17 @@ module.exports = class extends BaseRest {
       await metaModel.save(postId, data.meta)
     }
     // 3 添加内容与 term 分类之间的关联
-    if (think.isEmpty(data.term)) {
-      // TODO: 后台可以设置默认分类，暂时设置为1
-      data.term = 1
+    // term_taxonomy_id
+    const defaultTerm = this.options.default.term
+    let categories = []
+    if (think.isEmpty(data.categories)) {
+     categories = categories.concat(defaultTerm)
     }
-    await this.model('taxonomy', {appId: this.appId}).relationships(postId, data.term)
-
+    // 处理提交过来的分类信息，可能是单分类 id 也可能是数组, 分类 id 为 term_taxonomy_id
+    categories = categories.concat(JSON.parse(data.categories))
+    for (const cate of categories) {
+      await this.model('taxonomy', {appId: this.appId}).relationships(postId, cate)
+    }
     return this.success(postId)
   }
 

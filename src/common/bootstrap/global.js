@@ -115,6 +115,10 @@ global._formatOneMeta = (item) => {
   // }
   return item
 }
+
+// global._formatAndDealRoles = (item) => {
+//
+// }
 global._formatMeta = (list) => {
   const _items = [];
 

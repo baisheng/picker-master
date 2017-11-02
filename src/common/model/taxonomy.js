@@ -21,18 +21,19 @@ module.exports = class extends Base {
    */
   async getTerms (taxonomy) {
     const allTerms = await this.allTerms()
-    const allTaxonomies = await this.allTaxonomies()
+    // const allTaxonomies = await this.allTaxonomies()
+    // console.log(allTerms)
 
     // 按分类方法查询分类信息
-    const categorys = await think._.filter(allTaxonomies, {'taxonomy': taxonomy})
+    const categorys = await think._.filter(allTerms, {'taxonomy': taxonomy})
 
-    let _terms = []
-    categorys.forEach((item) => {
-      _terms.push(
-        Object.assign({},
-          item, think._.find(allTerms, {id: item.term_id})))
-    })
-    return _terms
+    // const _terms = []
+    // categorys.forEach((item) => {
+    //   _terms.push(
+    //     Object.assign({},
+    //       item, think._.find(allTerms, {id: item.term_id})))
+    // })
+    return categorys
   }
 
   /**
@@ -66,7 +67,7 @@ module.exports = class extends Base {
     //   'LEFT JOIN term_relationships AS tt ON posts.id=tt.object_id',
     //   'LEFT JOIN term_taxonomy as tr on tt.term_taxonomy_id = tr.term_id'
     // ]).field(['id', 'title', 'content', 'author', 'status']).where(`tr.term_id IN('${term_ids}') and tr.taxonomy = 'category' and status = 'publish'`).order('id DESC').select()
-    let objects = await _posts.join({
+    const objects = await _posts.join({
       term_relationships: {
         as: 'tr',
         on: ['id', 'tr.object_id']
@@ -83,6 +84,7 @@ module.exports = class extends Base {
       // join: 'left',
       // as: 'tt',
     }).field(['id', 'title', 'content', 'author', 'status']).where(`tr.term_id IN ('${term_ids}') AND tt.taxonomy IN ('${taxonomies}') AND status='publish'`).order('id DESC').page(page, pagesize).countSelect()
+
     return objects
     // objects = await _posts
   }
@@ -140,11 +142,12 @@ module.exports = class extends Base {
   }
 
   /**
-   * 根据内容获取分类, 这里查询出来的分类未查询它所归属的分类法，仅类别的信息
-   * @returns {Promise.<void>}
+   * 查询内容的标签
+   * @param object_id
+   * @returns {Promise.<*>}
    */
-  async getTermsByObject (object_id) {
-
+  async findTagsByObject (object_id) {
+    const taxonomy = 'post_tag'
     // 从缓存中提取到所有 term
     const all_terms = await this.allTerms();
 
@@ -160,7 +163,61 @@ module.exports = class extends Base {
      */
     const _terms = [];
     taxonomies.forEach((item) => {
-      _terms.push(think._.filter(all_terms, {id: item.term_id}));
+      _terms.push(think._.filter(all_terms, {term_id: item.term_id, taxonomy: taxonomy}));
+    });
+
+    return await think._.flattenDeep(_terms);
+  }
+  /**
+   * 按内容 id 查询分类信息
+   * @param object_id
+   * @returns {Promise.<void>}
+   */
+  async findCategoriesByObject (object_id) {
+    const taxonomy = 'category'
+    // 从缓存中提取到所有 term
+    const all_terms = await this.allTerms();
+
+    const _term_relationships = this.model("term_relationships", {appId: this.appId});
+
+    // 查询内容关联的分类法 id == term_id
+    const taxonomies = await _term_relationships.field('term_taxonomy_id as term_id').where({"object_id": object_id}).select();
+
+    /**
+     * 按 term_id 查询 term
+     * @type {Array}
+     * @private
+     */
+    const _terms = [];
+    taxonomies.forEach((item) => {
+      _terms.push(think._.filter(all_terms, {term_id: item.term_id, taxonomy: taxonomy}));
+    });
+
+    return await think._.flattenDeep(_terms);
+  }
+
+  /**
+   * 根据内容获取分类, 这里查询出来的分类未查询它所归属的分类法，仅类别的信息
+   * @returns {Promise.<void>}
+   */
+  async getTermsByObject (object_id) {
+
+    // 从缓存中提取到所有 term
+    const all_terms = await this.allTerms();
+    console.log(JSON.stringify(all_terms))
+    const _term_relationships = this.model("term_relationships", {appId: this.appId});
+
+    // 查询内容关联的分类法 id == term_id
+    const taxonomies = await _term_relationships.field('term_taxonomy_id as term_id').where({"object_id": object_id}).select();
+
+    /**
+     * 按 term_id 查询 term
+     * @type {Array}
+     * @private
+     */
+    const _terms = [];
+    taxonomies.forEach((item) => {
+      _terms.push(think._.filter(all_terms, {term_id: item.term_id}));
     });
 
     return await think._.flattenDeep(_terms);
@@ -179,7 +236,21 @@ module.exports = class extends Base {
     let ret = await think.cache(cacheKey)
 
     if (think.isEmpty(ret)) {
-      let _data = await this.model('terms', {appId: this.appId}).select();
+      const _data = await this.model('terms', {appId: this.appId}).alias('t').join({
+        term_taxonomy: {
+          as: 'tt',
+          on: ['t.id', 'tt.term_id']
+        }
+      }).field([
+        't.id as term_id',
+        't.name',
+        't.slug',
+        'tt.id as term_taxonomy_id',
+        'tt.taxonomy',
+        'tt.description',
+        'tt.parent',
+        'tt.count'
+      ]).order('tt.id DESC').select()
       _formatMeta(_data)
       await think.cache(cacheKey, _data)
       ret = await think.cache(cacheKey)
@@ -200,7 +271,7 @@ module.exports = class extends Base {
     let ret = await think.cache(cacheKey)
 
     if (think.isEmpty(ret)) {
-      let _data = await this.model('term_taxonomy', {appId: this.appId}).select();
+      const _data = await this.model('term_taxonomy', {appId: this.appId}).select();
       await think.cache(cacheKey, _data)
       ret = await think.cache(cacheKey)
     }
@@ -223,7 +294,7 @@ module.exports = class extends Base {
    * @returns {Promise.<void>}
    */
   async _relationships (object_id, term_taxonomy_id) {
-    let _term_relationships = this.model('term_relationships', {appId: this.appId});
+    const _term_relationships = this.model('term_relationships', {appId: this.appId});
 
     await _term_relationships.thenUpdate({
       'object_id': object_id,
@@ -239,57 +310,171 @@ module.exports = class extends Base {
    * @returns {Promise.<void>}
    */
   async relationships (object_id, term_taxonomy_id) {
-    let _term_relationships = this.model('term_relationships', {appId: this.appId});
+    const _term_relationships = this.model('term_relationships', {appId: this.appId});
 
     await _term_relationships.thenUpdate({
       'object_id': object_id,
       'term_taxonomy_id': term_taxonomy_id
-    }, {object_id: object_id})
+    }, {object_id: object_id, term_taxonomy_id: term_taxonomy_id})
   }
 
+  /**
+   * 按名字查询类别信息
+   * @param taxonomy
+   * @param term_slug
+   * @returns {Promise<any>}
+   */
+  async findTermByName(taxonomy, term_name) {
+    const data = await this.model('term_taxonomy', {appId: this.appId}).alias('tt').join({
+      terms: {
+        as: 't',
+        on: ['tt.term_id', 't.id']
+      }
+    }).field([
+      't.id as term',
+      'tt.id as taxonomy',
+      't.name',
+      't.slug',
+      'description',
+      'count'
+    ]).where({
+      'tt.taxonomy': taxonomy,
+      't.slug': term_name
+    }).find()
+    return data
+  }
+  /**
+   * 根据 slug 查询所属分类方法的分类信息
+   * @param taxonomy
+   * @param term_slug
+   * @returns {Promise.<void>}
+   */
+  async findTermBySlug(taxonomy, term_slug) {
+    const data = await this.model('term_taxonomy', {appId: this.appId}).alias('tt').join({
+      terms: {
+        as: 't',
+        on: ['tt.term_id', 't.id']
+      }
+    }).field([
+      't.id as term_id',
+      'tt.id as term_taxonomy_id',
+      't.name',
+      't.slug',
+      'description',
+      'count'
+    ]).where({
+      'tt.taxonomy': taxonomy,
+      't.slug': term_slug
+    }).find()
+    return data
+  }
+
+  /**
+   * @deprecated
+   * @param slug
+   * @returns {Promise.<*>}
+   */
   async getTermBySlug (slug) {
     const terms = await this.allTerms()
-    const term = await think._.find(terms, ['slug', slug])
+    const term = await think._.find(terms, ['slug', slug.toString()])
     if (!think.isEmpty(term)) {
       return term
     }
     return []
   }
 
+  async is_taxonomy_hierarchical (termId) {
+    const hierarchical = await this.model('term_taxonomy', {appId: this.appId}).where({
+      parent: termId
+    }).select()
+
+    return hierarchical.length > 0
+  }
+
+  /**
+   * 删除标签
+   * @param term_id
+   * @param term_taxonomy_id
+   * @returns {Promise.<void>}
+   */
+  async deleteTag (term_id, term_taxonomy_id) {
+    const _termmeta = this.model('termmeta', {appId: this.appId});
+    const _terms = this.model('terms', {appId: this.appId});
+    const _taxonomy = this.model('term_taxonomy', {appId: this.appId});
+    const _term_relationships = this.model('term_relationships', {appId: this.appId});
+
+    try {
+      await _termmeta.where({
+        term_id: term_id
+      }).delete()
+
+      // 更新内容关联
+      await _term_relationships.where({
+        term_taxonomy_id: term_taxonomy_id
+      }).delete()
+
+      // 删除分类方法
+      await _taxonomy.where({
+        id: term_taxonomy_id
+      }).delete()
+
+      // 删除分类
+      await _terms.where({
+        id: term_id
+      }).delete()
+    } catch (e) {
+      console.log(e)
+      throw e
+    }
+  }
+  // async deleteTag (term, taxonomy)
   /**
    * 删除 Term
    *
-   * @param term
-   * @param taxonomy
+   * @param term_id
+   * @param taxonomy_id
    * @returns {Promise.<boolean>}
    */
-  async deleteTerm (term, taxonomy) {
+  async deleteTerm (term_id, taxonomy_id) {
+    const options = await this.model('options', {appId: this.appId}).get()
+    const defaultTerm = options.default.term
+    if (defaultTerm === term_id) {
+      return false
+    }
     // let id = this.get('id');
     // 1 删除 分类前，先做更新内容操作，将与分类关联的内容更新
     // await preDeleteTerm();
     // 2 删除分类的 meta 数据
-    let _termmeta = this.model('termmeta', {appId: this.appId});
-    let _terms = this.model('terms', {appId: this.appId});
-    let _taxonomy = this.model('term_taxonomy', {appId: this.appId});
-    let _term_relationships = this.model('term_relationships', {appId: this.appId});
+    const _termmeta = this.model('termmeta', {appId: this.appId});
+    const _terms = this.model('terms', {appId: this.appId});
+    const _taxonomy = this.model('term_taxonomy', {appId: this.appId});
+    const _term_relationships = this.model('term_relationships', {appId: this.appId});
 
-    _termmeta.delete({
-      where: {term_id: term}
-    });
+    try {
+      await _termmeta.where({
+        term_id: term_id
+      }).delete()
 
-    _term_relationships.delete({
-      where: {object_id: term}
-    });
+      // 更新内容关联
+      await _term_relationships.where({
+        term_taxonomy_id: taxonomy_id
+      }).update({
+        term_taxonomy_id: defaultTerm
+      })
 
-    _terms.delete({
-      where: {id: term}
-    });
+      // 删除分类方法
+      await _taxonomy.where({
+        id: taxonomy_id
+      }).delete()
 
-    _taxonomy.delete({
-      where: {term_id: term}
-    });
-
-    return true;
+      // 删除分类
+      await _terms.where({
+        id: term_id
+      }).delete()
+    } catch (e) {
+      console.log(e)
+      throw e
+    }
     // 3 删除 分类的类别方法数据
     // 4 解除与类别关联的内容关系
   }

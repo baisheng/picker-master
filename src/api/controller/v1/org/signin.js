@@ -12,7 +12,7 @@ module.exports = class extends think.Controller {
     const userInfo = await userModel.where({user_login: userLogin}).find();
     // 验证用户是否存在
     if (think.isEmpty(userInfo)) {
-      return this.fail('ACCOUNT_ERROR');
+      return this.fail(400, '账户不存在');
     }
     // 验证机构中是否存在此用户并处理用户角色权限
     _formatOneMeta(userInfo)
@@ -22,19 +22,19 @@ module.exports = class extends think.Controller {
     if (!Object.is(userInfo.meta[`org_${orgId}_capabilities`], undefined)) {
       userInfo.role = JSON.parse(userInfo.meta[`org_${orgId}_capabilities`]).role
     } else {
-      return this.fail('ACCOUNT_FORBIDDEN');
+      return this.fail(401, 'ACCOUNT_FORBIDDEN');
     }
     // if (Object.is(userInfo.meta.avatar))
 
     // 帐号是否被禁用，且投稿者不允许登录
     if ((userInfo.user_status | 0) !== 1 || userInfo.deleted === 1) {
-      return this.fail('ACCOUNT_FORBIDDEN');
+      return this.fail(401, 'ACCOUNT_FORBIDDEN');
     }
 
     // 校验密码
     const password = data.user_pass;
     if (!userModel.checkPassword(userInfo, password)) {
-      return this.fail('ACCOUNT_ERROR');
+      return this.fail(400, '密码错误');
     }
     // 获取签名盐
     const token = jwt.sign(userInfo, 'S1BNbRp2b', {expiresIn: '3d'})

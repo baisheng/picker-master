@@ -9,7 +9,7 @@ module.exports = class extends Base {
    * @param int           parent      Optional. ID of parent term.
    * @returns {Promise.<void>}
    */
-  async categoryExists(cate_name, parent = null){
+  async categoryExists (cate_name, parent = null) {
 
   }
 
@@ -22,7 +22,7 @@ module.exports = class extends Base {
    * @param int parent Optional. ID of parent term under which to confine the exists search.
    * @returns {Promise.<void>}
    */
-  async termExists(term, taxonomy = '', parent = null){
+  async termExists (term, taxonomy = '', parent = null) {
     let _terms = this.model("terms");
     // let _taxonomy = this.model("term_taxonomy");
 
@@ -50,7 +50,7 @@ module.exports = class extends Base {
     }
 
 
-    if (!think.isEmpty(taxonomy)){
+    if (!think.isEmpty(taxonomy)) {
 
     }
     let map = {};
@@ -66,7 +66,7 @@ module.exports = class extends Base {
   }
 
 
-  async getTerms(taxonomy){
+  async getTerms (taxonomy) {
     let where = {};
     // query.taxonomy
     where['tt.taxonomy'] = taxonomy;

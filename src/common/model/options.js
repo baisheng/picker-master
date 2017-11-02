@@ -9,7 +9,6 @@ module.exports = class extends Base {
   }
 
   async get (flag) {
-    console.log(this.cacheKey)
     if (flag) {
       await think.cache(this.cacheKey, null)
     }
@@ -33,7 +32,6 @@ module.exports = class extends Base {
   async updateOptions(key, value) {
 
     console.log(key + ": " + value);
-
 
     const data = think.isObject(key) ? think.extend({}, key) : {[key]: value};
     let cacheData = await think.cache(this.cacheKey, undefined, this.cacheOptions);

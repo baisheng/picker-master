@@ -17,9 +17,28 @@ module.exports = class extends think.Model {
   }
 
   async get(appId) {
-    const app = await this.where({id: appId}).find()
-    _formatOneMeta(app)
-    return app
+    let apps = await think.cache('apps')
+    if (think.isEmpty(apps)) {
+      apps = await this.list()
+    }
+    const app = await think._.find(apps, ['id', appId.toString()])
+
+    if (!think.isEmpty(app)) {
+      // _formatOneMeta(app)
+      return app
+    } else {
+      return null
+    }
   }
 
+  /**
+   * 全部应用列表
+   * @returns {Promise.<*>}
+   */
+  async list() {
+    const apps = await this.select()
+    _formatMeta(apps)
+    await think.cache('apps', apps)
+    return apps
+  }
 }
