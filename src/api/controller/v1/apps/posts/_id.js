@@ -46,100 +46,116 @@ module.exports = class extends BaseRest {
       // term_taxonomy_id
       const defaultTerm = this.options.default.term
       let categories = []
-      if (think.isEmpty(data.categories)) {
+      if (Object.is(data.categories, undefined) && think.isEmpty(data.categories)) {
         categories = categories.concat(defaultTerm)
+      } else {
+        // 处理提交过来的分类信息，可能是单分类 id 也可能是数组, 分类 id 为 term_taxonomy_id
+        categories = categories.concat(JSON.parse(data.categories))
       }
-      // 处理提交过来的分类信息，可能是单分类 id 也可能是数组, 分类 id 为 term_taxonomy_id
-      categories = categories.concat(JSON.parse(data.categories))
+
+      // console.log(JSON.stringify(categories))
       for (const cate of categories) {
-        await this.model('taxonomy', {appId: this.appId}).relationships(this.id, cate)
+        await this.model('taxonomy', {appId: this.appId}).relationships(this.id, cate.term_taxonomy_id)
       }
-      return this.success(this.id)
+      const newData = await this.getPost(this.id)
+      return this.success(newData)
     }
     if (this.isGet) {
       const post_id = this.get('id')
       if (!think.isEmpty(post_id)) {
-        let fields = [
-          'id',
-          'author',
-          'status',
-          'type',
-          'title',
-          'name',
-          'content',
-          'sort',
-          'excerpt',
-          'date',
-          'modified',
-          'parent'
-        ];
-        fields = unique(fields);
-
-        let query = {}
-        query.id = post_id
-        query = {status: ['NOT IN', 'trash'], id: post_id}
-
-        const list = await this.model('posts', {appId: this.appId}).where(query).field(fields.join(",")).order('sort ASC').page(this.get('page'), 10).countSelect()
-
-        // 处理播放列表音频 Meta 信息
-        _formatMeta(list.data)
-
-        // 根据 Meta 信息中的音频附件 id 查询出音频地址
-        const metaModel = this.model('postmeta', {appId: this.appId})
-        for (const item of list.data) {
-          item.url = ''
-          // 如果有音频
-          if (!Object.is(item.meta._audio_id, undefined)) {
-            // 音频播放地址
-            item.url = await metaModel.getAttachment('file', item.meta._audio_id)
-          }
-          const userModel = this.model('users');
-
-          // 如果有作者信息
-          if (!Object.is(item.meta._author_id, undefined)) {
-            const author = await userModel.where({id: item.meta._author_id}).find()
-            _formatOneMeta(author)
-            item.authorInfo = author
-            // 查询 出对应的作者信息
-          } else {
-            const author = await userModel.where({id: item.author}).find()
-            _formatOneMeta(author)
-            item.authorInfo = author
-
-          }
-          // 取得头像地址
-          if (!Object.is(item.authorInfo.meta.avatar, undefined)) {
-            item.authorInfo.avatar = await this.model('postmeta').getAttachment('file', item.authorInfo.meta.avatar)
-          }
-
-          // 音频播放的歌词信息
-          // lrc
-
-          // 如果有封面 默认是 thumbnail 缩略图，如果是 podcast 就是封面特色图片 featured_image
-          // if (!Object.is(item.meta['_featured_image']))
-          if (!Object.is(item.meta._thumbnail_id, undefined)) {
-            // item.thumbnail = {
-            //   id: item.meta['_thumbnail_id']
-            // }
-            // item.thumbnail.url = await metaModel.getAttachment('file', item.meta['_thumbnail_id'])
-            item.featured_image = await metaModel.getAttachment('file', item.meta._thumbnail_id)
-            // item.thumbnal = await metaModel.getThumbnail({post_id: item.id})
-          }
-
-          // 获取内容的分类信息
-          // const terms = await this.model('taxonomy', {appId: this.appId}).getTermsByObject(query.id)
-          // console.log(JSON.stringify(terms))
-        }
-        // 处理分类及内容层级
-        await this.dealTerms(list)
-        // 处理标签信息
-        await this.dealTags(list)
-
-        await this.dealLikes(list.data[0])
+        const data = await this.getPost(post_id)
         // 返回一条数据
-        return this.success(list.data[0])
+        return this.success(data)
       }
     }
+  }
+
+  async getPost (post_id) {
+    let fields = [
+      'id',
+      'author',
+      'status',
+      'type',
+      'title',
+      'name',
+      'content',
+      'sort',
+      'excerpt',
+      'date',
+      'modified',
+      'parent'
+    ];
+    fields = unique(fields);
+
+    let query = {}
+    query.id = post_id
+    query = {status: ['NOT IN', 'trash'], id: post_id}
+
+    const list = await this.model('posts', {appId: this.appId}).where(query).field(fields.join(",")).order('sort ASC').page(this.get('page'), 10).countSelect()
+
+    // 处理播放列表音频 Meta 信息
+    _formatMeta(list.data)
+
+    // 根据 Meta 信息中的音频附件 id 查询出音频地址
+    const metaModel = this.model('postmeta', {appId: this.appId})
+    for (const item of list.data) {
+      item.url = ''
+      // 如果有音频
+      if (!Object.is(item.meta._audio_id, undefined)) {
+        // 音频播放地址
+        item.url = await metaModel.getAttachment('file', item.meta._audio_id)
+      }
+      const userModel = this.model('users');
+
+      // 如果有作者信息
+      // if (!Object.is(item.meta._author_id, undefined)) {
+      //   const author = await userModel.where({id: item.meta._author_id}).find()
+      //   _formatOneMeta(author)
+      //   item.authorInfo = author
+      // 查询 出对应的作者信息
+      // } else {
+      // const author = await userModel.where({id: item.author}).find()
+      const author = await userModel.getById(item.author)
+      // console.log(JSON.stringify(author))
+      _formatOneMeta(author)
+      item.author = author
+      // }
+      // 取得头像地址
+      if (!Object.is(item.author.meta.avatar, undefined)) {
+        item.author.avatar = await this.model('postmeta').getAttachment('file', item.author.meta.avatar)
+      }
+      // 作者简历
+      if (!Object.is(item.author.meta.resume, undefined)) {
+        item.author.resume = item.author.meta.resume
+      }
+      // 删除无用 meta 值
+      Reflect.deleteProperty(item.author, 'meta')
+      // 音频播放的歌词信息
+      // lrc
+
+      // 如果有封面 默认是 thumbnail 缩略图，如果是 podcast 就是封面特色图片 featured_image
+      // if (!Object.is(item.meta['_featured_image']))
+      if (!Object.is(item.meta._thumbnail_id, undefined)) {
+        // item.thumbnail = {
+        //   id: item.meta['_thumbnail_id']
+        // }
+        // item.thumbnail.url = await metaModel.getAttachment('file', item.meta['_thumbnail_id'])
+        item.featured_image = await metaModel.getAttachment('file', item.meta._thumbnail_id)
+        // item.thumbnal = await metaModel.getThumbnail({post_id: item.id})
+      }
+
+      // 获取内容的分类信息
+      // const terms = await this.model('taxonomy', {appId: this.appId}).getTermsByObject(query.id)
+      // console.log(JSON.stringify(terms))
+    }
+    // 处理分类及内容层级
+    await this.dealTerms(list)
+    // 处理标签信息
+    await this.dealTags(list)
+
+    await this.dealLikes(list.data[0])
+
+    return list.data[0]
   }
 
   async getAction () {
@@ -561,10 +577,15 @@ module.exports = class extends BaseRest {
    * @returns {Promise.<*>}
    */
   async dealTerms (list) {
+    console.log('********************')
     const _taxonomy = this.model('taxonomy', {appId: this.appId})
-    for (const item of list.data) {
-      item.categories = await _taxonomy.findCategoriesByObject(item.id)
+    console.log(list)
+    for (let item of list.data) {
+      item.categories = await _taxonomy.findCategoriesByObject(item.id.toString())
+      console.log('______')
+      console.log(JSON.stringify(item.categories))
     }
+
     // 处理内容层级
     // let treeList = await arr_to_tree(list.data, 0);
     list.data = await arr_to_tree(list.data, 0);
@@ -590,7 +611,7 @@ module.exports = class extends BaseRest {
    * @returns {Promise.<void>}
    */
   async dealLikes (post) {
-    const userId = this.ctx.state.user.userInfo.id
+    const userId = this.ctx.state.user.id
     const postMeta = this.model('postmeta', {appId: this.appId})
 
     const result = await postMeta.where({

@@ -1,7 +1,14 @@
 /* eslint-disable prefer-promise-reject-errors,no-console,prefer-promise-reject-errors,prefer-promise-reject-errors,no-warning-comments */
 const Base = require('./base');
 const {PasswordHash} = require('phpass');
-
+let fields = [
+  'user_login as login',
+  // 'user_pass as pass',
+  'user_nicename as nicename',
+  'user_email as email',
+  // 'user_url as url',
+  'user_status as status'
+]
 module.exports = class extends Base {
 
   get relation () {
@@ -59,6 +66,19 @@ module.exports = class extends Base {
     return user
   }
 
+  /**
+   * 根据 id 查找用户
+   * @param user_id
+   * @returns {Promise.<void>}
+   */
+  async getById(user_id) {
+    const user = await this.field(fields).where({
+      id: user_id
+    }).find()
+    const meta = await this.model('usermeta').where({user_id: user_id}).select()
+    user.metas = meta
+    return user
+  }
 /*
 { openId: 'oQgDx0IVqAg0b3GibFYBdtg3BKMA',
   nickName: '请好好说话🌱',
@@ -381,6 +401,63 @@ async updateWechatUser (data) {
   async likedPost (appid, post_id) {
     const userMeta = this.model('usermeta')
     const data = await userMeta.where(`meta_value ->'$.post_id' = '${post_id}' and meta_key = 'picker_${appid}_liked_posts'`).select()
+  }
+  /**
+   * 添加新喜欢的人员
+   * @param user_id
+   * @param post_id
+   * @returns {Promise.<void>}
+   */
+  async newLike (user_id, app_id, post_id) {
+    const userMeta = this.model('usermeta')
 
+    const result = await userMeta.where({
+      user_id: user_id,
+      meta_key: `picker_${app_id}_liked_posts`
+    }).find()
+
+    let likeCount = 0
+    if (!think.isEmpty(result)) {
+      if (!think.isEmpty(result.meta_value)) {
+        likeCount = JSON.parse(result.meta_value).length
+        const iLike = await think._.find(JSON.parse(result.meta_value), ['post_id', post_id])
+        if (!iLike) {
+          await userMeta.where({
+            user_id: user_id,
+            meta_key: `picker_${app_id}_liked_posts`
+          }).update({
+            'user_id': user_id,
+            'meta_key': `picker_${app_id}_liked_posts`,
+            'meta_value': ['exp', `JSON_ARRAY_APPEND(meta_value, '$', JSON_OBJECT('post_id', '${post_id}','date', '${new Date().getTime()}'))`]
+          })
+          likeCount++
+        }
+      }
+    } else {
+      // 添加
+      const res = await userMeta.add({
+        user_id: user_id,
+        meta_key: `picker_${app_id}_liked_posts`,
+        meta_value: ['exp', `JSON_ARRAY(JSON_OBJECT('post_id', '${post_id}', 'date', '${new Date().getTime()}'))`]
+      })
+      if (res > 0) {
+        likeCount++
+      }
+    }
+  }
+
+  /**
+   * UnLike post
+   * @param user_id
+   * @param post_id
+   * @returns {Promise<number>}
+   */
+  async unLike (user_id, app_id, post_id) {
+    console.log(user_id + ':' + app_id + ':' + post_id)
+    // const res = await this.where(`user_id = '${user_id}' AND meta_key = 'picker_${app_id}_liked_posts' AND JSON_SEARCH(meta_value, 'one', ${post_id}) IS NOT NULL`).update({
+    //     'meta_value': ['exp', `JSON_REMOVE(meta_value, SUBSTRING_INDEX(REPLACE(JSON_SEARCH(meta_value, 'one', '${post_id}', NULL, '$**.post_id'), '"', ''), '.', 1))`]
+    //   }
+    // )
+    // return res
   }
 }

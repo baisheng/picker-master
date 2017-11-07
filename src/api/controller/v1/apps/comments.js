@@ -1,34 +1,36 @@
 /* eslint-disable no-undef,no-return-await,default-case,max-depth,no-warning-comments */
 const tc = require('text-censor')
 const BaseRest = require('./Base')
+let fields = [
+  // 'comment_id as id',
+  'comment_post_id as post_id',
+  'comment_author as author',
+  'comment_author_ip as ip',
+  'comment_date as date',
+  'comment_content as content',
+  'comment_parent as parent',
+  'user_id'
+]
 module.exports = class extends BaseRest {
 
   // GET POST
   async indexAction () {
     if (this.isGet) {
       const comment_id = this.get('id')
-
-      const fields = [
-        'comment_id as id',
-        'comment_post_id as post_id',
-        'comment_author as author',
-        'comment_author_ip as ip',
-        'comment_date as date',
-        'comment_content as content',
-        'comment_parent as parent',
-        'user_id'
-      ]
       const usersModel = this.model('users')
 
-
       const commentModel = this.model('comments', {appId: this.appId})
-      const data = await commentModel.field(fields).where({
-        comment_id: comment_id
-      }).find()
-
-      data.author = await usersModel.where({id: data.user_id}).find()
-      _formatOneMeta(data.author)
-      return this.success(data)
+      if (!think.isEmpty(comment_id)) {
+        const data = await commentModel.field(fields).where({
+          comment_id: comment_id
+        }).find()
+        data.author = await usersModel.where({id: data.user_id}).find()
+        _formatOneMeta(data.author)
+        return this.success(data)
+      } else {
+        const data = await commentModel.field(fields).page(this.get('page'), 100).countSelect()
+        return this.success(data)
+      }
     }
 
     // 修改

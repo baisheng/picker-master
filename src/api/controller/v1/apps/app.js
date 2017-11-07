@@ -4,8 +4,17 @@ const jwt = require('jsonwebtoken')
 
 module.exports = class extends BaseRest {
   async indexAction () {
+    console.log('options ......')
     // const appsModel = this.model('apps')
     // const app = await appsModel.get(this.appId)
+    // this.app.default = this.options.default
+    // this.app.stickys = this.options.stickys
+    Reflect.deleteProperty(this.options, 'wechat')
+    Reflect.deleteProperty(this.options, 'upload')
+    Reflect.deleteProperty(this.options, '_user_roles')
+    Reflect.deleteProperty(this.options, 'default')
+    Reflect.deleteProperty(this.options._wxapp, 'config')
+    this.app.options = this.options._wxapp
     return this.success(this.app)
   }
 

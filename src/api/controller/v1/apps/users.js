@@ -163,13 +163,19 @@ module.exports = class extends Base {
       'id',
       'user_login as login',
       'user_email as email',
-      'user_nicename as name'
+      'user_nicename as nicename'
     ]).where({
       user_login: userLogin
     }).find()
 
     // Reflect.deleteProperty(user, 'metas')
     _formatOneMeta(user)
+    user.avatar = await this.model('postmeta').getAttachment('file', user.meta.avatar)
+    if (!Object.is(user.meta.resume, undefined)) {
+      user.resume = user.meta.resume
+    }
+    // 删除无用 meta 值
+    Reflect.deleteProperty(user, 'meta')
     // if (user.meta.meta_key.includes('_capabilities') && user.meta.meta_key.includes('picker_')) {
     //   Object.assign(user, JSON.parse(meta.meta_value))
     // }

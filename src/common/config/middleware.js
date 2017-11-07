@@ -2,6 +2,9 @@ const path = require('path');
 const isDev = think.env === 'development';
 const cors = require('kcors')
 const jwt = require('koa-jwt')
+const swaggerParser = require('think-swagger-parser')
+const swaggerRouter = require('think-swagger-router')
+const swaggerController = require('think-swagger-controller')
 
 module.exports = [
   {
@@ -89,7 +92,7 @@ module.exports = [
       secret: 'S1BNbRp2b'
     },
     match: ctx => { // match 为一个函数，将 ctx 传递给这个函数，如果返回结果为 true，则启用该 middleware
-      if (ctx.url.match(ctx.url.match(/^\/v1\/org\/\d+(?:\/subdomain_validation|signin|signout)?/) || ctx.url.match(/^\/v1\/app\/\w+\/options?/) || ctx.url.match(/^\/v1\/app\/\w+\/auth\/token?/))) {
+      if (ctx.url.match(ctx.url.match(/^\/v1\/org\/\d+(?:\/subdomain_validation|signin|signout)?/) || ctx.url.match(/^\/v1\/apps\/\w+\/options?/) || ctx.url.match(/^\/v1\/apps\/\w+\/auth\/token?/))) {
         return false;
       } else if (ctx.url.match(ctx.url.match(/^\/v1*?/))) {
         console.log(ctx.url)
@@ -99,4 +102,24 @@ module.exports = [
   },
   'logic',
   'controller'
-];
+  // {
+  //   handle: swaggerParser,
+  //   options: {
+  //     debug: isDev,
+  //     api_doc: './api/swagger.yaml',
+  //     controller_dir: './app/controller'
+  //   }
+  // },
+  // {
+  //   handle: swaggerRouter,
+  //   options: {
+  //     debug: isDev
+  //   }
+  // },
+  // {
+  //   handle: swaggerController,
+  //   options: {
+  //     debug: isDev
+  //   }
+  // }
+]

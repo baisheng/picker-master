@@ -5,15 +5,14 @@ const BaseRest = require('../Base');
 module.exports = class extends BaseRest {
 
   /**
-   * 查询全部 liked 用户
+   * 查询全部 评论的内容
    * @returns {Promise.<void>}
    */
   async indexAction () {
     const post_id = this.get('id')
-    const userId = this.ctx.state.user.userInfo.id
+    const userId = this.ctx.state.user.id
     const commentsModel = this.model('comments', {appId: this.appId})
     const fields = [
-      'comment_id as id',
       'comment_post_id as post_id',
       'comment_author as author',
       'comment_author_ip as ip',
@@ -22,24 +21,24 @@ module.exports = class extends BaseRest {
       'comment_parent as parent',
       'user_id'
     ]
-    const data = await commentsModel.field(fields).where({
+    const list = await commentsModel.field(fields).where({
       comment_post_id: post_id
-    }).select()
+    }).order('date DESC').page(this.get('page'), 20).countSelect()
     const usersModel = this.model('users')
 
-    for (let item of data) {
-      item.author = await usersModel.where({id: item.user_id}).find()
+    for (let item of list.data) {
+      // item.author = await usersModel.where({id: item.user_id}).find()
+      item.author = await usersModel.getById(item.user_id)
       _formatOneMeta(item.author)
+      item.date = this.ctx.moment(item.date).fromNow()
+      // 取得头像地址
+      if (!think.isEmpty(item.author.meta[`picker_${this.appId}_wechat`])) {
+        item.author.avatar = item.author.meta[`picker_${this.appId}_wechat`].avatarUrl
+        // user.type = 'wechat'
+      }
+      Reflect.deleteProperty(item.author, 'meta')
     }
-    return this.success({
-      found: data.length,
-      // app_id
-      comments: data
-      // found: ,
-      // i_like: iLike,
-      // post_id: id,
-      // likes: likes
-    })
+    return this.success(list)
 
     // exp.
     // {
@@ -84,17 +83,18 @@ module.exports = class extends BaseRest {
    * @returns {Promise.<*>}
    */
   async newAction () {
-    const userInfo = this.ctx.state.user.userInfo
+    const curUser = this.ctx.state.user
+    console.log(JSON.stringify(curUser))
     const post_id = this.get('id')
 
     const data = this.post()
     // data.content
     const commentsModel = this.model('comments', {appId: this.appId})
     const postData = {
-      user_id: userInfo.id,
+      user_id: curUser.id,
       comment_post_id: post_id,
       // comment_author: data.author,
-      comment_author: userInfo.id,
+      comment_author: curUser.id,
       comment_author_email: data.email,
       comment_author_url: data.url,
       comment_author_ip: _ip2int(this.ip),
@@ -105,12 +105,22 @@ module.exports = class extends BaseRest {
       comment_approved: 'approved'
     }
     await commentsModel.add(postData)
+    let author = await this.model('users').getById(curUser.id)
+    _formatOneMeta(author)
+    // 取得头像地址
+    if (!think.isEmpty(author.meta[`picker_${this.appId}_wechat`])) {
+      author.avatar = author.meta[`picker_${this.appId}_wechat`].avatarUrl
+      // user.type = 'wechat'
+    }
+    Reflect.deleteProperty(author, 'meta')
+
     return this.success({
-      post: {
-        id: post_id
-      },
-      author: userInfo,
-      date: new Date().getTime(),
+      post_id: post_id,
+      // post: {
+      //   id: post_id
+      // },
+      author: author,
+      date: this.ctx.moment(new Date().getTime()).fromNow(),
       content: postData.comment_content,
       status: postData.comment_approved,
       type: postData.comment_type,

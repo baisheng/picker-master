@@ -3,7 +3,7 @@ const Base = require('../Base')
 const jwt = require('jsonwebtoken')
 
 module.exports = class extends Base {
-  constructor(ctx) {
+  constructor (ctx) {
     super(ctx);
     this.DAO = this.model('users')
     this.metaDAO = this.model('usermeta')
@@ -35,31 +35,30 @@ module.exports = class extends Base {
         // 获取用户默认获取团队成员
         // const userIds = await userMeta.where(query).select()
         const userIds = await userMeta.where(`meta_value ->'$.type' = '${type}' and meta_key = 'picker_${appid}_capabilities'`).select()
-
-        if (!think.isEmpty(userIds)) {
-          const ids = []
-          userIds.forEach((item) => {
-            ids.push(item.user_id)
-          })
-          const users = await this.model('users').where({id: ['IN', ids]}).page(this.get('page'), 50).countSelect()
-          _formatMeta(users.data)
-          for (const user of users.data) {
-            if (!think.isEmpty(user.meta.avatar)) {
-              user.avatar = await this.model('postmeta').getAttachment('file', user.meta.avatar)
-            } else if (!think.isEmpty(user.meta[`picker_${appid}_wechat`])) {
-              user.avatar = user.meta[`picker_${appid}_wechat`].avatarUrl
-              // user.type = 'wechat'
-            }
-          }
-          return this.success(users)
+        if (think.isEmpty(userIds)) {
+          return this.success([])
         }
-        return this.success([])
+
+        const ids = []
+        userIds.forEach((item) => {
+          ids.push(item.user_id)
+        })
+        const users = await this.model('users').where({id: ['IN', ids]}).page(this.get('page'), 50).countSelect()
+        _formatMeta(users.data)
+        for (const user of users.data) {
+          if (!think.isEmpty(user.meta.avatar)) {
+            user.avatar = await this.model('postmeta').getAttachment('file', user.meta.avatar)
+          } else if (!think.isEmpty(user.meta[`picker_${appid}_wechat`])) {
+            user.avatar = user.meta[`picker_${appid}_wechat`].avatarUrl
+            // user.type = 'wechat'
+          }
+        }
+        return this.success(users)
       }
     }
 
     // 更新用户信息
     if (this.isPost) {
-      console.log('is post user ....')
       const data = this.post()
       if (think.isEmpty(data)) {
         return this.fail('Data is empty');
@@ -81,7 +80,7 @@ module.exports = class extends Base {
     const data = this.post()
     const approach = this.post('approach')
     // 注册用户来源
-    switch(approach) {
+    switch (approach) {
       // 微信小程序
       case 'wxapp': {
         // 判断用户是否已注册
@@ -119,7 +118,7 @@ module.exports = class extends Base {
    * @param data
    * @returns {Promise.<*>}
    */
-  async createToken(approach, data) {
+  async createToken (approach, data) {
     switch (approach) {
       case 'password': {
         break

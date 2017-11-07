@@ -181,7 +181,7 @@ module.exports = class extends Base {
     const _term_relationships = this.model("term_relationships", {appId: this.appId});
 
     // 查询内容关联的分类法 id == term_id
-    const taxonomies = await _term_relationships.field('term_taxonomy_id as term_id').where({"object_id": object_id}).select();
+    const taxonomies = await _term_relationships.field('term_taxonomy_id').where({"object_id": object_id}).select();
 
     /**
      * 按 term_id 查询 term
@@ -189,11 +189,13 @@ module.exports = class extends Base {
      * @private
      */
     const _terms = [];
+    console.log(JSON.stringify(all_terms))
     taxonomies.forEach((item) => {
-      _terms.push(think._.filter(all_terms, {term_id: item.term_id, taxonomy: taxonomy}));
+      _terms.push(think._.filter(all_terms, {term_taxonomy_id: item.term_taxonomy_id, taxonomy: taxonomy}));
     });
 
     return await think._.flattenDeep(_terms);
+    // return taxonomies
   }
 
   /**
@@ -312,10 +314,17 @@ module.exports = class extends Base {
   async relationships (object_id, term_taxonomy_id) {
     const _term_relationships = this.model('term_relationships', {appId: this.appId});
 
-    await _term_relationships.thenUpdate({
+    const res = await _term_relationships.thenUpdate({
       'object_id': object_id,
-      'term_taxonomy_id': term_taxonomy_id
+      'term_taxonomy_id': term_taxonomy_id.toString()
     }, {object_id: object_id, term_taxonomy_id: term_taxonomy_id})
+
+    // console.log('-------------')
+    // console.log(JSON.stringify(res))
+    // await _term_relationships.where({
+    //   'object_id': object_id,
+    //   'term_taxonomy_id': term_taxonomy_id.toString()
+    // }).increment('count', 1)
   }
 
   /**

@@ -3,6 +3,7 @@ const BaseRest = require('./_rest')
 module.exports = class extends BaseRest {
 
   async getAction() {
+    console.log('apps ....')
     let orgId = this.get('orgId')
     if (!think.isEmpty(orgId)) {
       // const data = await this.modelInstance.findByOrgId(orgId)

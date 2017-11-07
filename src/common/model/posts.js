@@ -56,6 +56,17 @@ module.exports = class extends Base {
   }
 
   /**
+   * 获取推荐内容
+   * @param stickys
+   * @returns {Promise.<*>}
+   */
+  async getStickys (stickys, page = 1) {
+    const list = await this.where({
+      id: ['IN', stickys]
+    }).page(page, 20).countSelect()
+    return list
+  }
+  /**
    * 根据分类与内容状态获取 内容列表
    * @param termIds
    * @param status

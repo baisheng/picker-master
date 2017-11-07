@@ -38,6 +38,12 @@ module.exports = class extends think.Model {
   async list() {
     const apps = await this.select()
     _formatMeta(apps)
+    for (let app of apps) {
+      if (!think.isEmpty(app.meta.info)) {
+        app = Object.assign(app, app.meta.info)
+      }
+      Reflect.deleteProperty(app, 'meta')
+    }
     await think.cache('apps', apps)
     return apps
   }

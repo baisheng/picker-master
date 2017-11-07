@@ -8,7 +8,7 @@ module.exports = class extends BaseRest {
    */
   async indexAction () {
     const userMeta = this.model('usermeta')
-    const userId = this.ctx.state.user.userInfo.id
+    const userId = this.ctx.state.user.id
     const data = await userMeta.where(`meta_key = 'picker_${this.appId}_liked_posts' and user_id = ${userId}`).find()
     if (!think.isEmpty((data))) {
       data.meta_value = JSON.parse(data.meta_value)

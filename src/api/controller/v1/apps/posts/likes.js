@@ -47,12 +47,11 @@ module.exports = class extends BaseRest {
    * @returns {Promise.<*>}
    */
   async newAction () {
-    console.log('lieks ......')
-    console.log(this.ctx.state.user)
-    const userId = this.ctx.state.user.userInfo.id
-    console.log(userId + 'xxxxx')
+    const userId = this.ctx.state.user.id
     const id = this.get('id')
     const postMeta = this.model('postmeta', {appId: this.appId})
+    // const userMeta = this.model('usermeta')
+
     const result = await postMeta.where({
       post_id: id,
       meta_key: '_liked'
@@ -74,10 +73,19 @@ module.exports = class extends BaseRest {
         meta_key: '_liked',
         meta_value: ['exp', `JSON_ARRAY(JSON_OBJECT('id', '${userId}', 'ip', '${_ip2int(this.ip)}'))`]
       })
+      // await usermeta.thenUpdate({
+      //   user_id: `${userId}`,
+      //   meta_key: `picker_${this.appId}_liked_posts`,
+      //   meta_value:
+      // }, {
+      //   user_id: `${data.userId}`,
+      //   meta_key: `picker_${data.appId}_wechat`
+      // })
       if (res > 0) {
         likeCount++
       }
     }
+    await this.model('users').newLike(userId, this.appId, id)
 
     return this.success({
       i_like: true,
@@ -116,7 +124,6 @@ module.exports = class extends BaseRest {
       // Current User
       const data = await postMeta.getLikeStatus(userId, this.id)
       // if (!think.isEmpty(data.value_index))
-      console.log(JSON.stringify(data))
       const res = {
         'i_like': data.contain === 1,
         'like_count': data.like_count,
@@ -130,6 +137,7 @@ module.exports = class extends BaseRest {
       if (action === 'delete') {
 
         await postMeta.unLike(userId, this.id)
+        await this.model('users').unLike(userId, this.appId, this.id)
         const likeCount = await postMeta.getLikedCount(this.id)
         const res = {
           'i_like': false,

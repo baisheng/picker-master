@@ -7,7 +7,6 @@ module.exports = class extends BaseRest {
   // GET ACTIONS
   //
   async getAction () {
-    console.log('org action')
     const action = this.get('action')
     if (!think.isEmpty(action)) {
       switch (action) {
@@ -27,13 +26,22 @@ module.exports = class extends BaseRest {
 
   async orgInfo () {
     try {
-      const data = await this.model('orgs').where({[this.modelInstance.pk]: this.orgId}).find();
+      let data = await this.model('orgs').where({[this.modelInstance.pk]: this.orgId}).find();
       for (let meta of data.metas) {
         if (meta.meta_key === 'basic') {
           data.basic = JSON.parse(meta.meta_value)
+          data = Object.assign(data, data.basic)
+          Reflect.deleteProperty(data, 'basic')
         }
       }
       delete data.metas;
+      for (let app of data.apps) {
+        if (!Object.is(app.metas, undefined)) {
+          _formatOneMeta(app)
+          app = Object.assign(app, app.meta.info)
+          Reflect.deleteProperty(app, 'meta')
+        }
+      }
       return this.success(data);
     } catch (e) {
       return this.fail()
