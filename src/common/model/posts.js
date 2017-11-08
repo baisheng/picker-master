@@ -102,15 +102,52 @@ module.exports = class extends Base {
     return data
   }
 
-  // async update (data) {
-  // return await super.update(data, this.options)
-  // if (!Object.is(data['featured_image'], undefined)) {
-  //   console.log(JSON.stringify(data))
-  //
-  // }
-  // }
-  // async save(data) {
-  // let res = await this.add{{
-  // }}
-  // }
+  /**
+   * 按分类 name 或 slug 查询内容
+   * @param category
+   * @returns {Promise<any>}
+   */
+  async findByCategory(category, page = 1) {
+    const fileds = [
+      'p.id',
+      'p.name',
+      'p.title',
+      'p.content',
+      'p.author',
+      'p.modified'
+    ]
+    const data = await this.model('terms', {appId: this.appId}).alias('t').join({
+      term_taxonomy: {
+        join: 'inner',
+        as: 'tt',
+        on: ['t.id', 'tt.term_id']
+      },
+      term_relationships: {
+        join: 'inner',
+        as: 'tr',
+        on: ['tr.term_taxonomy_id', 'tt.id'],
+        // on: {['tr.term_taxonomy_id', 'tt.term_taxonomy_id']}
+      },
+      posts: {
+        join: 'inner',
+        as: 'p',
+        on: ['p.id', 'tr.object_id']
+      }
+    }).field(fileds).where(`t.slug LIKE '%${category}%' OR t.name LIKE '%${category}%'`).order('sort ASC').page(page, 12).setRelation(true).countSelect()
+    let postIds = []
+    data.data.forEach((item) => {
+      postIds.push(item.id)
+    })
+
+    // 处理 Meta 信息
+    const metaModel = this.model('postmeta')
+    let metaData = await metaModel.field('post_id, meta_key, meta_value').where({
+      post_id: ['IN', postIds]
+    }).select()
+
+    data.data.forEach((item, i) => {
+      item.metas = think._.filter(metaData, {post_id: item.id})
+    })
+    return data
+  }
 }

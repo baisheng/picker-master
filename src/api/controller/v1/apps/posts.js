@@ -16,7 +16,6 @@ let fields = [
 ]
 module.exports = class extends BaseRest {
   async indexAction () {
-    console.log('get posts ............')
     const data = await this.getAllFromPage()
     return this.success(data)
   }
@@ -254,8 +253,15 @@ module.exports = class extends BaseRest {
     // query.sticky = false
     // query.sticky = this.get('sticky')
     let list = []
-    if (this.get('sticky') === 'true') {
-      // console.log('get sticky.....')
+    const category = this.get('category')
+    // if (!think.isEmpty(category)) {
+    //
+    // }
+    if (!think.isEmpty(category)) {
+      list = await this.model('posts', {appId: this.appId}).findByCategory(category, this.get('page'))
+      // return list
+      // console.log(JSON.stringify(list))
+    } else if (this.get('sticky') === 'true') {
       const stickys = this.options.stickys
       list = await this.model('posts', {appId: this.appId}).getStickys(stickys)
     } else {

@@ -189,7 +189,7 @@ module.exports = class extends Base {
      * @private
      */
     const _terms = [];
-    console.log(JSON.stringify(all_terms))
+    // console.log(JSON.stringify(all_terms))
     taxonomies.forEach((item) => {
       _terms.push(think._.filter(all_terms, {term_taxonomy_id: item.term_taxonomy_id, taxonomy: taxonomy}));
     });
@@ -206,7 +206,7 @@ module.exports = class extends Base {
 
     // 从缓存中提取到所有 term
     const all_terms = await this.allTerms();
-    console.log(JSON.stringify(all_terms))
+    // console.log(JSON.stringify(all_terms))
     const _term_relationships = this.model("term_relationships", {appId: this.appId});
 
     // 查询内容关联的分类法 id == term_id
