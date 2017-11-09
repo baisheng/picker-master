@@ -133,21 +133,23 @@ module.exports = class extends Base {
         as: 'p',
         on: ['p.id', 'tr.object_id']
       }
-    }).field(fileds).where(`t.slug LIKE '%${category}%' OR t.name LIKE '%${category}%'`).order('sort ASC').page(page, 12).setRelation(true).countSelect()
+    }).field(fileds).where(`t.slug = '${category}' OR t.name LIKE '%${category}%'`).order('sort ASC').page(page, 12).setRelation(true).countSelect()
     let postIds = []
     data.data.forEach((item) => {
       postIds.push(item.id)
     })
 
-    // 处理 Meta 信息
-    const metaModel = this.model('postmeta')
-    let metaData = await metaModel.field('post_id, meta_key, meta_value').where({
-      post_id: ['IN', postIds]
-    }).select()
+    if (!think.isEmpty(postIds)) {
+      // 处理 Meta 信息
+      const metaModel = this.model('postmeta')
+      let metaData = await metaModel.field('post_id, meta_key, meta_value').where({
+        post_id: ['IN', postIds]
+      }).select()
 
-    data.data.forEach((item, i) => {
-      item.metas = think._.filter(metaData, {post_id: item.id})
-    })
+      data.data.forEach((item, i) => {
+        item.metas = think._.filter(metaData, {post_id: item.id})
+      })
+    }
     return data
   }
 }

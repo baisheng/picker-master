@@ -535,43 +535,15 @@ module.exports = class extends BaseRest {
     return this.success(list.data[0])
   }
 
-  /**
-   * 处理分类信息，为查询的结果添加分类信息
-   * @param list
-   * @returns {Promise.<*>}
-   */
-  // async dealTerms (list) {
-  //   const _taxonomy = this.model('taxonomy', {appId: this.appId})
-  //   for (const item of list.data) {
-  //     item.terms = await _taxonomy.getTermsByObject(item.id)
-  //   }
-  //   // 处理内容层级
-  //   // let treeList = await arr_to_tree(list.data, 0);
-  //   list.data = await arr_to_tree(list.data, 0);
-  //
-  //   return list
-  // }
-
-  // async newAction () {
-  //   const data = this.post()
-    // data.categories = ['1', '2', '3']
-    // let cate = ["10"]
-    // let cate = []
-    // const cate= JSON.parse(data.categories)
-    // for (let i of cate) {
-    //   console.log('--' + i)
-    // }
-    // categories.push(JSON.parse(data.categories))
-    // return this.success(data)
-  // }
   async newAction () {
     const data = this.post()
     if (think.isEmpty(data.type)) {
-      data.type = 'podcast'
+      data.type = 'post_format'
     }
     const currentTime = new Date().getTime();
     data.date = currentTime
     data.modified = currentTime
+    // console.log(JSON.stringify(this.ctx.state.user.userInfo.id))
     if (think.isEmpty(data.author)) {
       data.author = this.ctx.state.user.userInfo.id
     }
@@ -595,6 +567,10 @@ module.exports = class extends BaseRest {
     } else {
       // 处理提交过来的分类信息，可能是单分类 id 也可能是数组, 分类 id 为 term_taxonomy_id
       categories = categories.concat(JSON.parse(data.categories))
+    }
+    // 4 获取内容的格式类别
+    if (!Object.is(data.format, undefined) && !think.isEmpty(data.format)) {
+      categories = categories.concat(data.format)
     }
     for (const cate of categories) {
       await this.model('taxonomy', {appId: this.appId}).relationships(postId, cate)

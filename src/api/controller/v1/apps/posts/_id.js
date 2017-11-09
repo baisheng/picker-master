@@ -22,7 +22,7 @@ module.exports = class extends BaseRest {
       }
       const data = this.post()
       if (think.isEmpty(data.type)) {
-        data.type = 'podcast'
+        data.type = 'post_format'
       }
       const currentTime = new Date().getTime();
       data.date = currentTime
@@ -55,7 +55,7 @@ module.exports = class extends BaseRest {
 
       // console.log(JSON.stringify(categories))
       for (const cate of categories) {
-        await this.model('taxonomy', {appId: this.appId}).relationships(this.id, cate.term_taxonomy_id)
+        await this.model('taxonomy', {appId: this.appId}).relationships(this.id, cate)
       }
       const newData = await this.getPost(this.id)
       return this.success(newData)

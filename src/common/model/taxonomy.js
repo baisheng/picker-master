@@ -252,7 +252,7 @@ module.exports = class extends Base {
         'tt.description',
         'tt.parent',
         'tt.count'
-      ]).order('tt.id DESC').select()
+      ]).order('tt.id ASC').select()
       _formatMeta(_data)
       await think.cache(cacheKey, _data)
       ret = await think.cache(cacheKey)

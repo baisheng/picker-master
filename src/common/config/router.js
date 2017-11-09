@@ -8,7 +8,9 @@ module.exports = [
   // ['/v1/apps/:app/users/login:user_id', '/api/v1/apps/users/login?appId=:1&id=:3', 'post'],
   // POST
   // /apps/$app/users/$user_ID/delete
+  // [/\/v1\/file?/, '/api/v1/file', 'rest'],
 
+  [/\/v1\/apps\/(\w+)\/file?/, '/api/v1/apps/file?appId=:1', 'rest'],
   [/\/v1\/apps\/(\w+)\/auth?(\/\w+)$/, '/api/v1/apps/auth/:2?appId=:1', 'get, post'],
   [/\/v1\/apps\/(\w+)\/posts\/(\d+)\/replies?/, '/api/v1/apps/posts/replies?appId=:1&id=:2', 'get'],
   [/\/v1\/apps\/(\w+)\/(\w+)\/(\d+)$/, '/api/v1/apps/:2/_id?appId=:1&id=:3', 'get, post'],
