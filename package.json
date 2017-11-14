@@ -9,6 +9,7 @@
     "lint-fix": "eslint --fix src/"
   },
   "dependencies": {
+    "@koa/cors": "2",
     "aliyun-dysms-sdk": "^1.0.0",
     "crypto": "^1.0.1",
     "httpx": "^2.1.2",

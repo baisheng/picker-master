@@ -1,16 +1,12 @@
 const path = require('path');
 const isDev = think.env === 'development';
-const cors = require('kcors')
+const cors = require('@koa/cors')
 const jwt = require('koa-jwt')
 const swaggerParser = require('think-swagger-parser')
 const swaggerRouter = require('think-swagger-router')
 const swaggerController = require('think-swagger-controller')
-
+const whitelist = ['http://picker.cc', 'http://api.picker.la', 'http://zy.picker.la'];
 module.exports = [
-  {
-    handle: cors,
-    options: {}
-  },
   {
     handle: 'meta',
     options: {
@@ -67,13 +63,33 @@ module.exports = [
   {
     handle: (option, app) => {
       return (ctx, next) => {
+        // const requestOrigin = ctx.origin
+        // const allowedOrigins = ['https://picker.cc', 'http://api.picker.la']
+        // const origin = ctx.origin
+        // if (whitelist.includes(requestOrigin) || whitelist.includes('localhost')) {
+        //   ctx.res.setHeader('Access-Control-Allow-Origin', requestOrigin)
+        // }
+        // ctx.res.setHeader('Access-Control-Allow-Headers', 'Authorization, Origin, No-Cache, X-Requested-With, If-Modified-Since, Pragma, Last-Modified, Cache-Control, Expires, Content-Type, X-E4M-With');
+        // ctx.res.setHeader('Access-Control-Allow-Methods', 'PUT,PATCH,POST,GET,DELETE,OPTIONS');
+        // ctx.res.setHeader('Access-Control-Max-Age', '1728000');
+        // ctx.res.setHeader('Content-Type', 'application/json;charset=utf-8');
+        // ctx.res.setHeader('X-Powered-By', 'Nodepress 1.0.0');
+        // console.log(ctx.accept.headers.origin + '------')
+        // if (!whitelist.includes(requestOrigin)) {
+          // return ctx.throw(`🙈 ${requestOrigin} is not a valid origin`);
+          // let err = new Error(`🙈 ${requestOrigin} 请求无效!`);
+          // err.status = 403;
+          // throw err;
+          // return ctx.throw(`🙈 ${requestOrigin} 请求无效!`);
+        // }
+        // console.log(ctx.header)
         // Custom 401 handling if you don't want to expose koa-jwt errors to users
         return next().catch((err) => {
           // if (err.status === 404) {
           //   ctx.status = 404
           //   ctx.body = '404'
           //   throw err;
-          // }
+          //
           // eslint-disable-next-line yoda
           if (401 === err.status) {
             ctx.status = 401;
@@ -87,6 +103,11 @@ module.exports = [
     }
   },
   {
+    handle: cors,
+    options: {
+    }
+  },
+  {
     handle: jwt,
     options: {
       secret: 'S1BNbRp2b'
@@ -95,7 +116,6 @@ module.exports = [
       if (ctx.url.match(ctx.url.match(/^\/v1\/org\/\d+(?:\/subdomain_validation|signin|signout)?/) || ctx.url.match(/^\/v1\/apps\/\w+\/options?/) || ctx.url.match(/^\/v1\/apps\/\w+\/auth\/token?/))) {
         return false;
       } else if (ctx.url.match(ctx.url.match(/^\/v1*?/))) {
-        console.log(ctx.url)
         return true
       }
     }
