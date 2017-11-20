@@ -1,3 +1,4 @@
+/* eslint-disable func-style,no-return-await */
 const qiniu = require('qiniu');
 module.exports = class extends think.Service {
   /**
@@ -26,7 +27,7 @@ module.exports = class extends think.Service {
     const putPolicy = new qiniu.rs.PutPolicy(options);
 
     // 用于前端直传直接返回 token
-    if (istoken && filePath == null) {
+    if (istoken && filePath === null) {
       const putPolicy = new qiniu.rs.PutPolicy({scope: bucket});
       // console.log(putPolicy.uploadToken(mac));
 

@@ -536,11 +536,15 @@ block-stream@*:
   dependencies:
     inherits "~2.0.0"
 
+bluebird-co@^2.2.0:
+  version "2.2.0"
+  resolved "http://registry.npm.taobao.org/bluebird-co/download/bluebird-co-2.2.0.tgz#e0a49e63b6b17e34c91f48b3934b769a377fbed7"
+
 bluebird@3.3.5:
   version "3.3.5"
   resolved "http://registry.npm.taobao.org/bluebird/download/bluebird-3.3.5.tgz#5ee747f1c7bd967658b683936430aee753955a34"
 
-bluebird@^3.3.4:
+bluebird@^3.3.4, bluebird@^3.5.1:
   version "3.5.1"
   resolved "http://registry.npm.taobao.org/bluebird/download/bluebird-3.5.1.tgz#d9551f9de98f1fcda1e683d17ee91a0602ee2eb9"
 
@@ -805,6 +809,10 @@ debug@^2.1.1, debug@^2.2.0, debug@^2.3.2, debug@^2.6.0, debug@^2.6.1, debug@^2.6
 decamelize@^1.1.1:
   version "1.2.0"
   resolved "http://registry.npm.taobao.org/decamelize/download/decamelize-1.2.0.tgz#f6534d15148269b20352e7bee26f501f9a191290"
+
+deep-equal@0.2.1:
+  version "0.2.1"
+  resolved "http://registry.npm.taobao.org/deep-equal/download/deep-equal-0.2.1.tgz#fad7a793224cbf0c3c7786f92ef780e4fc8cc878"
 
 deep-equal@~1.0.1:
   version "1.0.1"
@@ -1140,6 +1148,12 @@ filename-regex@^2.0.0:
   version "2.0.1"
   resolved "http://registry.npm.taobao.org/filename-regex/download/filename-regex-2.0.1.tgz#c1c4b9bee3e09725ddb106b75c1e301fe2f18b26"
 
+filereader-stream@^0.2.0:
+  version "0.2.0"
+  resolved "http://registry.npm.taobao.org/filereader-stream/download/filereader-stream-0.2.0.tgz#16374a202715b640b666ecffd07089938e9ff11f"
+  dependencies:
+    inherits "1.0.0"
+
 fill-range@^2.1.0:
   version "2.2.3"
   resolved "http://registry.npm.taobao.org/fill-range/download/fill-range-2.2.3.tgz#50b77dfd7e469bc7492470963699fe7a8485a723"
@@ -1464,6 +1478,10 @@ inflight@^1.0.4:
     once "^1.3.0"
     wrappy "1"
 
+inherits@1.0.0:
+  version "1.0.0"
+  resolved "http://registry.npm.taobao.org/inherits/download/inherits-1.0.0.tgz#38e1975285bf1f7ba9c84da102bb12771322ac48"
+
 inherits@2, inherits@2.0.3, inherits@^2.0.1, inherits@^2.0.3, inherits@~2.0.0, inherits@~2.0.1, inherits@~2.0.3:
   version "2.0.3"
   resolved "http://registry.npm.taobao.org/inherits/download/inherits-2.0.3.tgz#633c2c83e3da42a502f52466022480f4208261de"
@@ -1695,6 +1713,12 @@ jschardet@^1.4.2:
 jsesc@^1.3.0:
   version "1.3.0"
   resolved "http://registry.npm.taobao.org/jsesc/download/jsesc-1.3.0.tgz#46c3fec8c1892b12b0833db9bc7622176dbab34b"
+
+jsmediatags@^3.8.1:
+  version "3.8.1"
+  resolved "http://registry.npm.taobao.org/jsmediatags/download/jsmediatags-3.8.1.tgz#e27d26e957b0b330c28f9762c82940c4dcc64720"
+  dependencies:
+    xhr2 "^0.1.4"
 
 json-bigint@^0.2.3:
   version "0.2.3"
@@ -2091,6 +2115,13 @@ moment@2.x.x, moment@^2.19.1:
   version "2.19.0"
   resolved "http://registry.npm.taobao.org/moment/download/moment-2.19.0.tgz#44f675ef6b944942762581b1c179fb679e599d67"
 
+mp3-duration@^1.1.0:
+  version "1.1.0"
+  resolved "http://registry.npm.taobao.org/mp3-duration/download/mp3-duration-1.1.0.tgz#c002e4e454448060873660abb4da7d10118d0e9c"
+  dependencies:
+    bluebird "^3.5.1"
+    bluebird-co "^2.2.0"
+
 ms@2.0.0, ms@^2.0.0:
   version "2.0.0"
   resolved "http://registry.npm.taobao.org/ms/download/ms-2.0.0.tgz#5608aeadfc00be6c2901df5f9861788de0d597c8"
@@ -2098,6 +2129,16 @@ ms@2.0.0, ms@^2.0.0:
 ms@^1.0.0:
   version "1.0.0"
   resolved "http://registry.npm.taobao.org/ms/download/ms-1.0.0.tgz#59adcd22edc543f7b5381862d31387b1f4bc9473"
+
+musicmetadata@^2.0.5:
+  version "2.0.5"
+  resolved "http://registry.npm.taobao.org/musicmetadata/download/musicmetadata-2.0.5.tgz#7ae910d99fbaee05f2bd543aef10b6fbe1f37bd4"
+  dependencies:
+    deep-equal "0.2.1"
+    filereader-stream "^0.2.0"
+    is-stream "^1.1.0"
+    strtok2 "~1.0.0"
+    through "~2.3.4"
 
 mustache@^2.3.0:
   version "2.3.0"
@@ -2906,6 +2947,10 @@ strip-json-comments@~2.0.1:
   version "2.0.1"
   resolved "http://registry.npm.taobao.org/strip-json-comments/download/strip-json-comments-2.0.1.tgz#3c531942e908c2697c0ec344858c286c7ca0a60a"
 
+strtok2@~1.0.0:
+  version "1.0.4"
+  resolved "http://registry.npm.taobao.org/strtok2/download/strtok2-1.0.4.tgz#df9ffb2e70a3336b4660e267ef0547e610275fc1"
+
 supports-color@^2.0.0:
   version "2.0.0"
   resolved "http://registry.npm.taobao.org/supports-color/download/supports-color-2.0.0.tgz#535d045ce6b6363fa40117084629995e9df324c7"
@@ -3328,7 +3373,7 @@ thinkjs@^3.0.0:
     think-trace "^1.0.2"
     think-validator "^1.0.2"
 
-through@^2.3.6, through@~2.3:
+through@^2.3.6, through@~2.3, through@~2.3.4:
   version "2.3.8"
   resolved "http://registry.npm.taobao.org/through/download/through-2.3.8.tgz#0dd4c9ffaabc357960b1b724115d7e0e86a2e1f5"
 
@@ -3529,6 +3574,10 @@ write@^0.2.1:
   resolved "http://registry.npm.taobao.org/write/download/write-0.2.1.tgz#5fc03828e264cea3fe91455476f7a3c566cb0757"
   dependencies:
     mkdirp "^0.5.1"
+
+xhr2@^0.1.4:
+  version "0.1.4"
+  resolved "http://registry.npm.taobao.org/xhr2/download/xhr2-0.1.4.tgz#7f87658847716db5026323812f818cadab387a5f"
 
 xml2js@^0.4.17:
   version "0.4.19"

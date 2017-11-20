@@ -250,7 +250,7 @@ module.exports = class extends BaseRest {
     // query.parent = this.get('parent')
     // query.type = 'post_format'
     query.type = !think.isEmpty(this.get('type')) ? this.get('type') : 'post_format'
-    // query.sticky = false
+    // query.sticky = fals
     // query.sticky = this.get('sticky')
     let list = []
     const category = this.get('category')
@@ -265,7 +265,7 @@ module.exports = class extends BaseRest {
       const stickys = this.options.stickys
       list = await this.model('posts', {appId: this.appId}).getStickys(stickys)
     } else {
-      list = await this.model('posts', {appId: this.appId}).where(query).field(fields.join(",")).order('sort ASC').page(this.get('page'), 12).countSelect()
+      list = await this.model('posts', {appId: this.appId}).where(query).field(fields.join(",")).order('sort ASC').page(this.get('page'), 50).countSelect()
     }
     _formatMeta(list.data)
     const metaModel = this.model('postmeta', {appId: this.appId})

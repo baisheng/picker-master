@@ -3,6 +3,9 @@ const path = require('path');
 const fs = require('fs')
 // const sharp = require('sharp')
 // const mediaTags = require("jsmediatags")
+// const mm = require('musicmetadata')
+const mp3Duration = require('mp3-duration');
+
 const BaseRest = require('./Base')
 
 module.exports = class extends BaseRest {
@@ -56,24 +59,24 @@ module.exports = class extends BaseRest {
           url: fileUrl,
           title: data.title
         }
-        if (oneOf(file.type, ['audio/mpeg', 'audio/x-m4a', 'audio/x-m4a', 'audio/mp3'])) {
-          Promise.all([
-            await postModel.addMeta(_post_id, '_attachment_metadata', '{}'),
-            await postModel.addMeta(_post_id, '_attachment_file', fileUrl)
-          ])
+        if (oneOf(file.type, ['audio/mpeg', 'audio/mp3'])) {
           // Promise.all([
-          // new mediaTags.Reader(data.guid)
-          // .setTagsToRead(['title', 'artist', 'album', 'TLE'])
-          // .read({
-          //   onSuccess: function(tag) {
-          //     console.log(tag)
-          //     // console.log(JSON.stringify(tag) + '----');
-          //   },
-          //   onError: function(error) {
-          //     console.log(':(', error.type, error.info);
-          //   }
-          // })
-          //
+          try {
+            await mp3Duration(filePath, async (err, duration) => {
+              if (err) throw err
+              Promise.all([
+                await postModel.addMeta(_post_id, '_attachment_metadata', {"duration": duration}),
+                await postModel.addMeta(_post_id, '_attachment_file', fileUrl)
+              ])
+              // return duration
+              // console.log('Your file is ' + duration + ' seconds long')
+            })
+          } catch (err) {
+            console.log(err)
+            throw err
+          }
+          // ])
+
           // mediaTags.read(data.guid, {
           //   onSuccess: function(tag) {
           // Promise.all([

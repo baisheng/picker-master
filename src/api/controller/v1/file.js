@@ -2,9 +2,9 @@
 const path = require('path');
 const fs = require('fs')
 // const sharp = require('sharp')
-// const mediaTags = require("jsmediatags")
+const mediaTags = require("jsmediatags")
 // const BaseRest = require('./_rest')
-module.exports = class extends think.Controller  {
+module.exports = class extends think.Controller {
 
   async postAction () {
     const postModel = this.model('posts')
@@ -32,7 +32,7 @@ module.exports = class extends think.Controller  {
     // 执行文件上传逻辑
     if (config.type === 'qiniu') {
       const service = this.service('qiniu')
-      const upload = await service.upload(filePath, basename, config.option)
+/*      const upload = await service.upload(filePath, basename, config.option)
       // console.log(this.ctx.state)
       if (!think.isEmpty(upload)) {
         const data = {
@@ -54,24 +54,25 @@ module.exports = class extends think.Controller  {
           id: _post_id,
           url: fileUrl,
           title: data.title
-        }
+        }*/
         if (oneOf(file.type, ['audio/mpeg', 'audio/x-m4a', 'audio/x-m4a', 'audio/mp3'])) {
-          Promise.all([
-            await postModel.addMeta(_post_id, '_attachment_metadata', '{}'),
-            await postModel.addMeta(_post_id, '_attachment_file', fileUrl)
-          ])
           // Promise.all([
-          // new mediaTags.Reader(data.guid)
-          // .setTagsToRead(['title', 'artist', 'album', 'TLE'])
-          // .read({
-          //   onSuccess: function(tag) {
-          //     console.log(tag)
-          //     // console.log(JSON.stringify(tag) + '----');
-          //   },
-          //   onError: function(error) {
-          //     console.log(':(', error.type, error.info);
-          //   }
-          // })
+          //   await postModel.addMeta(_post_id, '_attachment_metadata', '{}'),
+          //   await postModel.addMeta(_post_id, '_attachment_file', fileUrl)
+          // ])
+          Promise.all([
+            new mediaTags.Reader(file)
+              .setTagsToRead(['title', 'artist', 'album', 'TLE'])
+              .read({
+                onSuccess: function (tag) {
+                  console.log(tag)
+                  // console.log(JSON.stringify(tag) + '----');
+                },
+                onError: function (error) {
+                  console.log(':(', error.type, error.info);
+                }
+              })
+          ])
           //
           // mediaTags.read(data.guid, {
           //   onSuccess: function(tag) {
@@ -87,7 +88,7 @@ module.exports = class extends think.Controller  {
           // })
           // ])
         }
-        if (oneOf(file.type, ['image/jpg', 'image/jpeg', 'image/png'])) {
+/*        if (oneOf(file.type, ['image/jpg', 'image/jpeg', 'image/png'])) {
           try {
             // await this.sharpMetadata(file.path)
             await postModel.addMeta(_post_id, '_attachment_file', fileUrl)
@@ -98,8 +99,8 @@ module.exports = class extends think.Controller  {
 // eslint-disable-next-line no-unreachable
           }
         }
-        return this.success(retData)
-      }
+        return this.success(retData)*/
+      // }
     }
 
   }
