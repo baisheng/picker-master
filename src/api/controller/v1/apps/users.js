@@ -39,7 +39,7 @@ module.exports = class extends Base {
         userIds.forEach((item) => {
           ids.push(item.user_id)
         })
-        const users = await this.model('users').where({id: ['IN', ids]}).page(this.get('page'), 50).countSelect()
+        const users = await this.model('users').where({id: ['IN', ids]}).page(this.get('page'), 500).countSelect()
         _formatMeta(users.data)
         for (const user of users.data) {
           if (!think.isEmpty(user.meta.avatar)) {
