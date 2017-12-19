@@ -7,7 +7,6 @@ const crypto = require('crypto')
 module.exports = class extends BaseRest {
 
   async indexAction () {
-    return this.success('alala ----index')
   }
   async tokenAction () {
     if (this.isGet) {

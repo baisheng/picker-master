@@ -264,6 +264,7 @@ module.exports = class extends BaseRest {
     } else if (this.get('sticky') === 'true') {
       const stickys = this.options.stickys
       list = await this.model('posts', {appId: this.appId}).getStickys(stickys)
+
     } else {
       list = await this.model('posts', {appId: this.appId}).where(query).field(fields.join(",")).order('sort ASC').page(this.get('page'), 50).countSelect()
     }
@@ -323,6 +324,10 @@ module.exports = class extends BaseRest {
         // item.thumbnal = await metaModel.getThumbnail({post_id: item.id})
       }
     }
+    // list.data = think._.sortBy(list.data, (item) => {
+    //   return -item
+    // });
+    list.data = think._.reverse(list.data)
     return list
   }
 

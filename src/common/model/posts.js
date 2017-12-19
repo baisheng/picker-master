@@ -63,7 +63,7 @@ module.exports = class extends Base {
   async getStickys (stickys, page = 1) {
     const list = await this.where({
       id: ['IN', stickys]
-    }).page(page, 20).countSelect()
+    }).order(`INSTR (',${stickys},', CONCAT(',',id,','))`).page(page, 20).countSelect()
     return list
   }
   /**
