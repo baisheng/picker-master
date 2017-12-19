@@ -63,6 +63,7 @@ module.exports = class extends Base {
   async getStickys (stickys, page = 1) {
     const list = await this.where({
       id: ['IN', stickys]
+      // 按 IN 条件的顺序查询出结果
     }).order(`INSTR (',${stickys},', CONCAT(',',id,','))`).page(page, 20).countSelect()
     return list
   }

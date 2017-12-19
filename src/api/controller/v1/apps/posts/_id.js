@@ -53,7 +53,6 @@ module.exports = class extends BaseRest {
         categories = categories.concat(JSON.parse(data.categories))
       }
 
-      // console.log(JSON.stringify(categories))
       for (const cate of categories) {
         await this.model('taxonomy', {appId: this.appId}).relationships(this.id, cate)
       }
