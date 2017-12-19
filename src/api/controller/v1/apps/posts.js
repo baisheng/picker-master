@@ -324,10 +324,6 @@ module.exports = class extends BaseRest {
         // item.thumbnal = await metaModel.getThumbnail({post_id: item.id})
       }
     }
-    // list.data = think._.sortBy(list.data, (item) => {
-    //   return -item
-    // });
-    list.data = think._.reverse(list.data)
     return list
   }
 
