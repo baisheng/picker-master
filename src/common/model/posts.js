@@ -108,7 +108,7 @@ module.exports = class extends Base {
    * @param category
    * @returns {Promise<any>}
    */
-  async findByCategory(category, page = 1) {
+  async findByCategory(category, page = 1, pagesize) {
     const fileds = [
       'p.id',
       'p.name',
@@ -134,7 +134,7 @@ module.exports = class extends Base {
         as: 'p',
         on: ['p.id', 'tr.object_id']
       }
-    }).field(fileds).where(`t.slug = '${category}' OR t.name LIKE '%${category}%'`).order('sort ASC').page(page, 12).setRelation(true).countSelect()
+    }).field(fileds).where(`t.slug = '${category}' OR t.name LIKE '%${category}%'`).order('sort ASC, modified ASC').page(page, pagesize).setRelation(true).countSelect()
     let postIds = []
     data.data.forEach((item) => {
       postIds.push(item.id)

@@ -16,7 +16,7 @@ module.exports = class extends BaseRest {
     }
     if (this.isGet) {
       if (!think.isEmpty(slug)) {
-        const term = await this.findTermBySlug('category', slug)
+        const term = await taxonomyModel.findTermBySlug('category', slug)
         return this.success(term)
       }
     }

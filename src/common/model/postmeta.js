@@ -114,6 +114,54 @@ module.exports = class extends Base {
   }
 
   /**
+   * 删除关联的 item 项目
+   * @param postId
+   * @param itemId
+   * @returns {Promise<number>}
+   */
+  async removeItem (postId, itemId) {
+    const res = await this.where(`post_id = '${postId}' AND meta_key = '_items' AND JSON_SEARCH(meta_value, 'one', ${itemId}) IS NOT NULL`).update({
+      'meta_value': ['exp', `JSON_REMOVE(meta_value, SUBSTRING_INDEX(replace(JSON_SEARCH(meta_value, 'one', '${itemId}', NULL , '$**.id'), '"', ''), '.', 1))`]
+    })
+    const {items} = await this.field(`meta_value as items`).where(`post_id = '${postId}' AND meta_key = '_items'`).find()
+    return JSON.parse(items)
+  }
+
+  /**
+   * 关联 Item 对象
+   * @param postId
+   * @param itemId
+   * @param status
+   * @returns {Promise<void>}
+   */
+  async related (postId, itemId, status) {
+    // 每次添加插入至顶部
+    await this.where({
+      post_id: postId,
+      meta_key: '_items'
+    }).update({
+      'post_id': postId,
+      'meta_key': '_items',
+      'meta_value': ['exp', `JSON_ARRAY_INSERT(meta_value, '$[0]', JSON_OBJECT('id', '${itemId}','status', '${status}'))`]
+    })
+  }
+  /**
+   * 更新关联的 Item 状态
+   * @param postId
+   * @param itemId
+   * @param status
+   * @returns {Promise<number>}
+   */
+  async changeItemStatus (postId, itemId, status) {
+    // CONCAT(SUBSTRING_INDEX(replace(JSON_SEARCH(meta_value, 'one', '3', NULL , '$**.id')
+    // 这个是为了处理 JSON 返回的值 $[0] 这样的，来处理对应的 json array 下的 json object Key value
+    const res = await this.where(`post_id = '${postId}' AND meta_key = '_items' AND JSON_SEARCH(meta_value, 'one', ${itemId}) IS NOT NULL`).update({
+      'meta_value': ['exp', `JSON_REPLACE(meta_value, CONCAT(SUBSTRING_INDEX(replace(JSON_SEARCH(meta_value, 'one', '${itemId}', NULL , '$**.id'), '"', ''), '.', 1),'.status'), '${status}')`]
+    })
+    return res
+  }
+
+  /**
    * 获取用户是否 like a post
    * @param user_id
    * @param post_id

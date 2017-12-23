@@ -2,6 +2,7 @@
 const Base = require('./base');
 const {PasswordHash} = require('phpass');
 let fields = [
+  'id',
   'user_login as login',
   // 'user_pass as pass',
   'user_nicename as nicename',

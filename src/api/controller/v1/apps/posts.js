@@ -84,14 +84,13 @@ module.exports = class extends BaseRest {
       const status = this.get('status')
 
       if (!think.isEmpty(status)) {
-        if (status === 'my') {
+        query.status = status
+        if (query.status === 'my') {
           // query.status = ['NOT IN', 'trash']
           query.author = this.ctx.state.user.id
         }
-        if (status === 'drafts') {
+        if (query.status === 'drafts') {
           query.status = ['like', '%draft%']
-        } else {
-          query.status = status
         }
       }
       return await this.getPodcastList(query, fields)
@@ -244,7 +243,12 @@ module.exports = class extends BaseRest {
       query.author = author
     }
     // date query
-    query.status = ['NOT IN', 'trash']
+    const status = this.get('status')
+    if (think.isEmpty(status) || status === 'all') {
+      query.status = ['NOT IN', 'trash']
+    } else {
+      query.status = status
+    }
     // query.parent = 0
     query.parent = !think.isEmpty(this.get('parent')) ? this.get('parent') : 0
     // query.parent = this.get('parent')
@@ -258,7 +262,8 @@ module.exports = class extends BaseRest {
     //
     // }
     if (!think.isEmpty(category)) {
-      list = await this.model('posts', {appId: this.appId}).findByCategory(category, this.get('page'))
+      // list = await this.model('posts', {appId: this.appId}).findByCategory(category, this.get('page'), this.get('pagesize') ? this.get('pagesize') : 100)
+      list = await this.model('posts', {appId: this.appId}).findByCategory(category, this.get('page'), 100)
       // return list
       // console.log(JSON.stringify(list))
     } else if (this.get('sticky') === 'true') {
@@ -266,17 +271,20 @@ module.exports = class extends BaseRest {
       list = await this.model('posts', {appId: this.appId}).getStickys(stickys)
 
     } else {
-      list = await this.model('posts', {appId: this.appId}).where(query).field(fields.join(",")).order('sort ASC').page(this.get('page'), 10).countSelect()
+      list = await this.model('posts', {appId: this.appId}).where(query).field(fields.join(",")).order('sort ASC').page(this.get('page'), 100).countSelect()
     }
     _formatMeta(list.data)
     const metaModel = this.model('postmeta', {appId: this.appId})
+
     for (const item of list.data) {
+      // console.log(JSON.stringify(item.meta))
       item.url = ''
       // 如果有音频
       if (!Object.is(item.meta._audio_id, undefined)) {
         // 音频播放地址
         item.url = await metaModel.getAttachment('file', item.meta._audio_id)
       }
+
       const userModel = this.model('users');
       // TODO: 如果有多作者信息
       // if (!Object.is(item.meta._author_id, undefined)) {
@@ -554,7 +562,7 @@ module.exports = class extends BaseRest {
     const postId = await this.modelInstance.add(data)
     // 2 更新 meta 数据
     if (!Object.is(data.meta, undefined)) {
-      const metaModel = await this.model('postmeta', {appId: this.appId})
+      const metaModel = this.model('postmeta', {appId: this.appId})
       // 保存 meta 信息
       await metaModel.save(postId, data.meta)
     }
@@ -575,6 +583,12 @@ module.exports = class extends BaseRest {
     }
     for (const cate of categories) {
       await this.model('taxonomy', {appId: this.appId}).relationships(postId, cate)
+    }
+    // 5 如果有关联信息，更新关联对象信息
+    if (!Object.is(data.relateTo, undefined) && !think.isEmpty(data.relateTo)) {
+      const metaModel = this.model('postmeta', {appId: this.appId})
+      // 保存关联对象的 meta 信息
+      await metaModel.related(data.relateTo, postId, data.relateStatus)
     }
     const newPost = await this.getPost(postId)
     return this.success(newPost)

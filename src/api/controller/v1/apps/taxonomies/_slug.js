@@ -3,6 +3,7 @@ const BaseRest = require('../Base')
 module.exports = class extends BaseRest {
 
   async indexAction () {
+    console.log('taxonomies slug')
     const taxonomy = this.get('taxonomy')
     const slug = this.get('slug')
 

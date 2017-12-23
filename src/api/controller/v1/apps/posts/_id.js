@@ -25,21 +25,45 @@ module.exports = class extends BaseRest {
         data.type = 'post_format'
       }
       const currentTime = new Date().getTime();
-      data.date = currentTime
+      // data.date = currentTime
       data.modified = currentTime
       if (think.isEmpty(data.author)) {
         data.author = this.ctx.state.user.userInfo.id
       }
-      if (think.isEmpty(data.status)) {
-        data.status = 'auto-draft';
+      const metaModel = await this.model('postmeta', {appId: this.appId})
+
+      // if data.itemStatus === 'delete' 从数组中 remove 并返回完整的数组
+      if (!think.isEmpty(data.item_id)) {
+        if (data.item_status === 'delete') {
+          const res = await metaModel.removeItem(this.id, data.item_id)
+          return this.success(res)
+          // const newData = await this.getPost(this.id)
+          // return this.success(newData)
+        }
+        // 更新 relate item
+        const res = await metaModel.changeItemStatus(this.id, data.item_id, data.item_status)
+        // 更新 item 状态
+        return this.success(res)
       }
+      // if (think.isEmpty(data.status)) {
+      //   data.status = 'auto-draft';
+      // }
       // const postId = await this.modelInstance.add(data)
       await this.model('posts', {appId: this.appId}).where({id: this.id}).update(data);
-
       // 2 更新 meta 数据
       if (!Object.is(data.meta, undefined)) {
-        const metaModel = await this.model('postmeta', {appId: this.appId})
         // 保存 meta 信息
+        await metaModel.save(this.id, data.meta)
+      }
+      // update data.related item status
+      // if data.related not empte
+      // const json_sql = `update picker_resume.picker_options set value = json_set(value,'$.${value.key}', '${value.value}') where \`key\` = '${key}'`;
+
+      // console.log(JSON.stringify(data))
+      if (!think.isEmpty(data.items)) {
+        data.meta = {
+          '_items': JSON.stringify(data.items)
+        }
         await metaModel.save(this.id, data.meta)
       }
       // 3 添加内容与 term 分类之间的关联
@@ -88,7 +112,7 @@ module.exports = class extends BaseRest {
 
     let query = {}
     query.id = post_id
-    query = {status: ['NOT IN', 'trash'], id: post_id}
+    // query = {status: ['NOT IN', 'trash'], id: post_id}
 
     const list = await this.model('posts', {appId: this.appId}).where(query).field(fields.join(",")).order('sort ASC').page(this.get('page'), 10).countSelect()
 
@@ -127,6 +151,12 @@ module.exports = class extends BaseRest {
       if (!Object.is(item.author.meta.resume, undefined)) {
         item.author.resume = item.author.meta.resume
       }
+
+      if (!Object.is(item.meta._items, undefined)) {
+        item.items = item.meta._items
+        // think._.reverse(item.items)
+      }
+      Reflect.deleteProperty(item.meta, '_items')
       // 删除无用 meta 值
       Reflect.deleteProperty(item.author, 'meta')
       // 音频播放的歌词信息
