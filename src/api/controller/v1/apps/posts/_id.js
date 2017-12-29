@@ -36,6 +36,8 @@ module.exports = class extends BaseRest {
       if (!think.isEmpty(data.item_id)) {
         if (data.item_status === 'delete') {
           const res = await metaModel.removeItem(this.id, data.item_id)
+          await this.model('posts', {appId: this.appId}).where({id: data.item_id}).update({status: 'trash'});
+
           return this.success(res)
           // const newData = await this.getPost(this.id)
           // return this.success(newData)

@@ -263,7 +263,7 @@ module.exports = class extends BaseRest {
     // }
     if (!think.isEmpty(category)) {
       // list = await this.model('posts', {appId: this.appId}).findByCategory(category, this.get('page'), this.get('pagesize') ? this.get('pagesize') : 100)
-      list = await this.model('posts', {appId: this.appId}).findByCategory(category, this.get('page'), 100)
+      list = await this.model('posts', {appId: this.appId}).findByCategory(category, this.get('page'), 12)
       // return list
       // console.log(JSON.stringify(list))
     } else if (this.get('sticky') === 'true') {
@@ -271,7 +271,7 @@ module.exports = class extends BaseRest {
       list = await this.model('posts', {appId: this.appId}).getStickys(stickys)
 
     } else {
-      list = await this.model('posts', {appId: this.appId}).where(query).field(fields.join(",")).order('sort ASC').page(this.get('page'), 100).countSelect()
+      list = await this.model('posts', {appId: this.appId}).where(query).field(fields.join(",")).order('sort ASC').page(this.get('page'), this.get('pagesize') ? this.get('pagesize') : 30).countSelect()
     }
     _formatMeta(list.data)
     const metaModel = this.model('postmeta', {appId: this.appId})
