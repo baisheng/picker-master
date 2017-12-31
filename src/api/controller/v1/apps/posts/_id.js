@@ -57,14 +57,10 @@ module.exports = class extends BaseRest {
         // 保存 meta 信息
         await metaModel.save(this.id, data.meta)
       }
-      // update data.related item status
-      // if data.related not empte
-      // const json_sql = `update picker_resume.picker_options set value = json_set(value,'$.${value.key}', '${value.value}') where \`key\` = '${key}'`;
-
-      // console.log(JSON.stringify(data))
       if (!think.isEmpty(data.items)) {
         data.meta = {
           '_items': JSON.stringify(data.items)
+
         }
         await metaModel.save(this.id, data.meta)
       }
