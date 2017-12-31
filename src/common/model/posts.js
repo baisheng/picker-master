@@ -67,6 +67,19 @@ module.exports = class extends Base {
     }).order(`INSTR (',${stickys},', CONCAT(',',id,','))`).page(page, 20).countSelect()
     return list
   }
+
+  /**
+   * 获取推荐内容
+   * @param stickys
+   * @returns {Promise.<*>}
+   */
+  async getItems (metaItems) {
+    const list = await this.where({
+      id: ['IN', metaItems]
+      // 按 IN 条件的顺序查询出结果
+    }).order(`INSTR (',${metaItems},', CONCAT(',',id,','))`)
+    return list
+  }
   /**
    * 根据分类与内容状态获取 内容列表
    * @param termIds

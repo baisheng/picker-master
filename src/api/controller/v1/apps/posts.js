@@ -1,4 +1,4 @@
-/* eslint-disable no-undef,no-return-await,default-case,max-depth,no-warning-comments */
+/* eslint-disable no-undef,no-return-await,default-case,max-depth,no-warning-comments,comma-spacing */
 const BaseRest = require('./Base')
 let fields = [
   'id',
@@ -16,6 +16,18 @@ let fields = [
 ]
 module.exports = class extends BaseRest {
   async indexAction () {
+    // 格式旧数据用的
+/*    let array = []
+    if (this.get('print')) {
+      for (const i of [147,149,165,168,170,171,173,174,176,177,179,201,204,206,208,210,212,225,227,231]) {
+        let obj = {
+          "id": `${i}`,
+          "status": "approved"
+        }
+        array.unshift(obj)
+      }
+      return this.success(array)
+    }*/
     const data = await this.getAllFromPage()
     return this.success(data)
   }
@@ -276,7 +288,19 @@ module.exports = class extends BaseRest {
     _formatMeta(list.data)
     const metaModel = this.model('postmeta', {appId: this.appId})
 
+    // if (!think.isEmpty(data.items)) {
+    //   data.meta = {
+    //     '_items': JSON.stringify(data.items)
+    //   }
+    //   await metaModel.save(this.id, data.meta)
+    // }
     for (const item of list.data) {
+      if (!Object.is(item.meta._items, undefined)) {
+        item.items = item.meta._items
+        // think._.reverse(item.items)
+      }
+      Reflect.deleteProperty(item.meta, '_items')
+
       // console.log(JSON.stringify(item.meta))
       item.url = ''
       // 如果有音频

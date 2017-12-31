@@ -2,6 +2,23 @@
 const Base = require('./base');
 
 module.exports = class extends Base {
+  // get relation () {
+  //   return {
+  //     // children: {
+  //     //   type:think.Model.HAS_MANY,
+  //     //   model: 'posts',
+  //     //   fKey: 'parent'
+  //     // },
+  //     metas: {
+  //       type: think.Model.HAS_MANY,
+  //       model: 'postmeta',
+  //       fKey: 'post_id',
+  //       field: "post_id,meta_key,meta_value"
+  //       // rModel: 'usermeta',
+  //       // fKey: 'users_id'
+  //     }
+  //   };
+  // }
   get relation () {
     return {
       metas: {
@@ -238,7 +255,14 @@ module.exports = class extends Base {
     let ret = await think.cache(cacheKey)
 
     if (think.isEmpty(ret)) {
-      const _data = await this.model('terms', {appId: this.appId}).alias('t').join({
+      let _data = await this.model('terms', {appId: this.appId}).alias('t')
+        .join({
+          termmeta: {
+            as: 'tm',
+            on: ['t.id', 'tm.term_id']
+          }
+        })
+        .join({
         term_taxonomy: {
           as: 'tt',
           on: ['t.id', 'tt.term_id']
@@ -251,9 +275,32 @@ module.exports = class extends Base {
         'tt.taxonomy',
         'tt.description',
         'tt.parent',
-        'tt.count'
+        'tt.count',
+          'tm.*'
       ]).order('tt.id ASC').select()
+      // console.log(JSON.stringify(_data))
       _formatMeta(_data)
+      // _data.meta = {}
+      for (let item of _data) {
+        // console.log(item)
+        if (!think.isEmpty(item.meta_value)) {
+          item.meta = {}
+          // console.log(item.meta_value)
+          item.meta[item.meta_key] = item.meta_value
+        }
+        if (!Object.is(item.meta, '_order')) {
+          item.order = item.meta._order
+        }
+        Reflect.deleteProperty(item, 'meta_id')
+        Reflect.deleteProperty(item, 'meta_key')
+        Reflect.deleteProperty(item, 'meta_value')
+      }
+
+      // 按 termmeta 的 order 键进行排序
+      _data = think._.sortBy(_data, (item) => {
+        return item.order
+      })
+
       await think.cache(cacheKey, _data)
       ret = await think.cache(cacheKey)
     }
@@ -313,11 +360,17 @@ module.exports = class extends Base {
    */
   async relationships (object_id, term_taxonomy_id) {
     const _term_relationships = this.model('term_relationships', {appId: this.appId});
-
-    const res = await _term_relationships.thenUpdate({
-      'object_id': object_id,
-      'term_taxonomy_id': term_taxonomy_id.toString()
-    }, {object_id: object_id, term_taxonomy_id: term_taxonomy_id})
+    const res = await _term_relationships.where({object_id: object_id, term_taxonomy_id: term_taxonomy_id}).find()
+    console.log(res)
+    if (think.isEmpty(res)) {
+      await _term_relationships.add({object_id: object_id, term_taxonomy_id: term_taxonomy_id})
+    } else {
+      await _term_relationships.where({object_id: object_id, term_taxonomy_id: term_taxonomy_id}).delete();
+    }
+    // const res = await _term_relationships.thenUpdate({
+    //   'object_id': object_id,
+    //   'term_taxonomy_id': term_taxonomy_id.toString()
+    // }, {object_id: object_id, term_taxonomy_id: term_taxonomy_id})
 
     // console.log('-------------')
     // console.log(JSON.stringify(res))

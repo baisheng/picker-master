@@ -12,6 +12,9 @@ module.exports = class extends BaseRest {
     if (this.isPost) {
       return this.fail()
     }
+    if (!think.isEmpty(this.get('ids'))) {
+
+    }
     // 获取分类
     const data = await this.getTermsByTaxonomy('category')
     // this.success(data)
@@ -105,6 +108,7 @@ module.exports = class extends BaseRest {
   async getTermsByTaxonomy (taxonomy) {
     const taxonomyModel = this.model('taxonomy', {appId: this.appId})
     const terms = await taxonomyModel.getTerms(taxonomy)
+    // console.log(JSON.stringify(terms))
     for (const item of terms) {
       item.url = ''
       const metaModel = this.model('postmeta', {appId: this.appId})
