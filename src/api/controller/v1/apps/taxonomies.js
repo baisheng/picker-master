@@ -7,7 +7,6 @@ module.exports = class extends BaseRest {
   //
   async getAction () {
     const slug = this.get('slug')
-    console.log(slug + '---xxx')
     if (!think.isEmpty(slug)) {
       const term = await this.getTermBySlug(slug)
       return this.success(term)

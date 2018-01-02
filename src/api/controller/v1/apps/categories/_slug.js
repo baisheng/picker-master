@@ -29,15 +29,23 @@ module.exports = class extends BaseRest {
         return this.fail(400, '未提交要更新的内容');
       }
       const termData = await taxonomyModel.findTermBySlug('category', slug)
-      console.log(JSON.stringify(termData))
+      // console.log(JSON.stringify(termData))
       if (think.isEmpty(termData)) {
         return this.fail(404, '分类信息未找到.')
       }
       // 如果存在即更新
-      if (termData.name === data.name) {
-        return this.fail(400, '名称已存在!');
+      // if (termData.name !== data.name) {
+      //   return this.fail(400, '名称已存在!');
+      // }
+      // console.log(JSON.stringify(data))
+      // console.log(slugify(`${data.name}`))
+      if (!think.isEmpty(data.name)) {
+        if (termData.name !== data.name) {
+          data.slug = slugify(data.name)
+        } else {
+          data.slug = slug
+        }
       }
-      data.slug = slugify(data.name)
 
       // 更新分类信息
       if (!Object.is(data.name, undefined) && !think.isEmpty(data.name)) {
@@ -48,12 +56,12 @@ module.exports = class extends BaseRest {
       }
       if (!Object.is(data.meta, undefined)) {
         const termMetaModel = this.model('termmeta', {appId: this.appId})
-        await termMetaModel.save(termData.term, data.meta)
+        await termMetaModel.save(termData.term_id, data.meta)
       }
       // 更新分类方法信息
       if (!think.isEmpty(data.description) || !think.isEmpty(data.parent)) {
         await this.model('term_taxonomy', {appId: this.appId}).thenUpdate(data, {
-          term_id: termData.term
+          term_id: termData.term_id
         })
       }
       // 更新缓存

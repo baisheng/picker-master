@@ -185,6 +185,7 @@ module.exports = class extends Base {
 
     return await think._.flattenDeep(_terms);
   }
+
   /**
    * 按内容 id 查询分类信息
    * @param object_id
@@ -255,52 +256,66 @@ module.exports = class extends Base {
     let ret = await think.cache(cacheKey)
 
     if (think.isEmpty(ret)) {
+      /*      let _data = await this.model('terms', {appId: this.appId}).alias('t')
+              .join({
+                termmeta: {
+                  as: 'tm',
+                  on: ['t.id', 'tm.term_id']
+                }
+              })
+              .join({
+                term_taxonomy: {
+                  as: 'tt',
+                  on: ['t.id', 'tt.term_id']
+                }
+              }).field([
+                't.id as term_id',
+                't.name',
+                't.slug',
+                'tt.id as term_taxonomy_id',
+                'tt.taxonomy',
+                'tt.description',
+                'tt.parent',
+                'tt.count',
+                'tm.*'
+              ]).order('tt.id ASC').select()*/
       let _data = await this.model('terms', {appId: this.appId}).alias('t')
         .join({
-          termmeta: {
-            as: 'tm',
-            on: ['t.id', 'tm.term_id']
+          term_taxonomy: {
+            as: 'tt',
+            on: ['t.id', 'tt.term_id']
           }
-        })
-        .join({
-        term_taxonomy: {
-          as: 'tt',
-          on: ['t.id', 'tt.term_id']
-        }
-      }).field([
-        't.id as term_id',
-        't.name',
-        't.slug',
-        'tt.id as term_taxonomy_id',
-        'tt.taxonomy',
-        'tt.description',
-        'tt.parent',
-        'tt.count',
-          'tm.*'
-      ]).order('tt.id ASC').select()
-      // console.log(JSON.stringify(_data))
-      _formatMeta(_data)
-      // _data.meta = {}
-      for (let item of _data) {
-        // console.log(item)
-        if (!think.isEmpty(item.meta_value)) {
-          item.meta = {}
-          // console.log(item.meta_value)
-          item.meta[item.meta_key] = item.meta_value
-        }
-        if (!Object.is(item.meta, '_order')) {
-          item.order = item.meta._order
-        }
-        Reflect.deleteProperty(item, 'meta_id')
-        Reflect.deleteProperty(item, 'meta_key')
-        Reflect.deleteProperty(item, 'meta_value')
+        }).field([
+          't.id as term_id',
+          't.name',
+          't.slug',
+          'tt.id as term_taxonomy_id',
+          'tt.taxonomy',
+          'tt.description',
+          'tt.parent',
+          'tt.count',
+        ]).order('tt.id ASC').select()
+
+      // 处理 metas 信息
+      const termmetaModel = this.model('termmeta', {appId: this.appId})
+      // 为 IN 查询处理 ids
+      const ids = []
+      for (const item of _data) {
+        ids.push(item.term_id)
       }
-
-      // 按 termmeta 的 order 键进行排序
-      _data = think._.sortBy(_data, (item) => {
-        return item.order
-      })
-
+      const metaList = await termmetaModel.where({term_id: ['IN', ids]}).select()
+      // 处理成组数据
+      const metaGroup = think._.groupBy(metaList, 'term_id')
+      for (let key of Object.keys(metaGroup)) {
+        for (let item of _data) {
+          if (item.term_id.toString() === key.toString()) {
+            item.metas = metaGroup[key]
+          }
+        }
+      }
+      // 格式化 meta 信息
+      _formatMeta(_data)
+      _data = think._.sortBy(_data, 'meta._order')
       await think.cache(cacheKey, _data)
       ret = await think.cache(cacheKey)
     }
@@ -361,7 +376,6 @@ module.exports = class extends Base {
   async relationships (object_id, term_taxonomy_id) {
     const _term_relationships = this.model('term_relationships', {appId: this.appId});
     const res = await _term_relationships.where({object_id: object_id, term_taxonomy_id: term_taxonomy_id}).find()
-    console.log(res)
     if (think.isEmpty(res)) {
       await _term_relationships.add({object_id: object_id, term_taxonomy_id: term_taxonomy_id})
     } else {
@@ -386,7 +400,7 @@ module.exports = class extends Base {
    * @param term_slug
    * @returns {Promise<any>}
    */
-  async findTermByName(taxonomy, term_name) {
+  async findTermByName (taxonomy, term_name) {
     const data = await this.model('term_taxonomy', {appId: this.appId}).alias('tt').join({
       terms: {
         as: 't',
@@ -405,30 +419,33 @@ module.exports = class extends Base {
     }).find()
     return data
   }
+
   /**
    * 根据 slug 查询所属分类方法的分类信息
    * @param taxonomy
    * @param term_slug
    * @returns {Promise.<void>}
    */
-  async findTermBySlug(taxonomy, term_slug) {
-    const data = await this.model('term_taxonomy', {appId: this.appId}).alias('tt').join({
-      terms: {
-        as: 't',
-        on: ['tt.term_id', 't.id']
-      }
-    }).field([
-      't.id as term_id',
-      'tt.id as term_taxonomy_id',
-      't.name',
-      't.slug',
-      'description',
-      'count'
-    ]).where({
-      'tt.taxonomy': taxonomy,
-      't.slug': term_slug
-    }).find()
+  async findTermBySlug (taxonomy, term_slug) {
+    const data = await this.model('term_taxonomy', {appId: this.appId}).alias('tt')
+      .join({
+        terms: {
+          as: 't',
+          on: ['tt.term_id', 't.id']
+        }
+      }).field([
+        't.id as term_id',
+        'tt.id as term_taxonomy_id',
+        't.name',
+        't.slug',
+        'description',
+        'count'
+      ]).where({
+        'tt.taxonomy': taxonomy,
+        't.slug': term_slug
+      }).find()
     return data
+
   }
 
   /**
@@ -489,6 +506,7 @@ module.exports = class extends Base {
       throw e
     }
   }
+
   // async deleteTag (term, taxonomy)
   /**
    * 删除 Term

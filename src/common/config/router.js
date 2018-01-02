@@ -18,6 +18,7 @@ module.exports = [
   [/\/v1\/apps\/(\w+)\/(\w+)\/(\d+)$/, '/api/v1/apps/:2/_id?appId=:1&id=:3', 'get, post'],
   [/\/v1\/apps\/(\w+)\/(\w+)\/(\d+)\/(delete)$/, '/api/v1/apps/:2/_id/:4?appId=:1&id=:3', 'post'],
   [/\/v1\/apps\/(\w+)\/comments\/(\d+)?/, '/api/v1/apps/comments?appId=:1&id=:2', 'get'],
+  [/\/v1\/apps\/(\w+)\/comments-(\w+)?/, '/api/v1/apps/comments?appId=:1&action=:2', 'get'],
   [/\/v1\/apps\/(\w+)\/posts$/, '/api/v1/apps/posts?appId=:1', 'get'],
 
   // LIKES API

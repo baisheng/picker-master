@@ -1,4 +1,4 @@
-/* eslint-disable prefer-reflect */
+/* eslint-disable prefer-reflect,no-undef */
 // 生成6位的随机数
 global.Random = () => {
   let num = ''
@@ -80,7 +80,31 @@ global.arr_to_tree = function (data, parent) {
 
     if (data[i].parent === parent) {
       result.push(data[i]);
-      temp = arr_to_tree(data, data[i].id);
+      temp = this.arr_to_tree(data, data[i].id);
+      if (temp.length > 0) {
+        data[i].expanded = true;
+        data[i].children = temp;
+        data[i].chnum = data[i].children.length
+      }
+    }
+  }
+  return result;
+}
+
+/* global arr_to_tree */
+global.treeGroup = function (data, parent) {
+  // eslint-disable-next-line one-var
+  let result = [], temp;
+  const length = data.length;
+  if (length === 1) {
+    data[0].children = []
+    data[0].chnum = data[0].children.length
+    return data
+  }
+  for (let i = 0; i < length; i++) {
+    if (data[i].parent === parent) {
+      result.push(data[i]);
+      temp = this.arr_to_tree(data, data[i].id);
       if (temp.length > 0) {
         data[i].expanded = true;
         data[i].children = temp;
